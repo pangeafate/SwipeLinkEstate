@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import LinkCreator from '../LinkCreator'
 
@@ -94,7 +94,9 @@ describe('LinkCreator', () => {
 
       // ACT - Select first property
       const firstPropertyCard = screen.getByTestId('property-card-prop-1')
-      await user.click(firstPropertyCard)
+      await act(async () => {
+        await user.click(firstPropertyCard)
+      })
 
       // ASSERT
       expect(firstPropertyCard).toHaveClass('border-blue-500') // Selected state
@@ -102,13 +104,17 @@ describe('LinkCreator', () => {
 
       // ACT - Select second property
       const secondPropertyCard = screen.getByTestId('property-card-prop-2')
-      await user.click(secondPropertyCard)
+      await act(async () => {
+        await user.click(secondPropertyCard)
+      })
 
       // ASSERT
       expect(screen.getByText('2 properties selected')).toBeInTheDocument()
 
       // ACT - Deselect first property
-      await user.click(firstPropertyCard)
+      await act(async () => {
+        await user.click(firstPropertyCard)
+      })
 
       // ASSERT
       expect(firstPropertyCard).not.toHaveClass('border-blue-500')
@@ -130,7 +136,9 @@ describe('LinkCreator', () => {
 
       // ACT - Select a property
       const firstPropertyCard = screen.getByTestId('property-card-prop-1')
-      await user.click(firstPropertyCard)
+      await act(async () => {
+        await user.click(firstPropertyCard)
+      })
 
       // ASSERT - Next button should be enabled
       expect(nextButton).toBeEnabled()
@@ -146,8 +154,12 @@ describe('LinkCreator', () => {
       })
 
       // ACT - Select property and click Next
-      await user.click(screen.getByTestId('property-card-prop-1'))
-      await user.click(screen.getByText('Next'))
+      await act(async () => {
+        await user.click(screen.getByTestId('property-card-prop-1'))
+      })
+      await act(async () => {
+        await user.click(screen.getByText('Next'))
+      })
 
       // ASSERT
       expect(screen.getByText('Step 2: Link Details')).toBeInTheDocument()
@@ -165,9 +177,15 @@ describe('LinkCreator', () => {
       })
 
       // Navigate to step 2
-      await user.click(screen.getByTestId('property-card-prop-1'))
-      await user.click(screen.getByTestId('property-card-prop-2'))
-      await user.click(screen.getByText('Next'))
+      await act(async () => {
+        await user.click(screen.getByTestId('property-card-prop-1'))
+      })
+      await act(async () => {
+        await user.click(screen.getByTestId('property-card-prop-2'))
+      })
+      await act(async () => {
+        await user.click(screen.getByText('Next'))
+      })
 
       return user
     }
@@ -188,7 +206,9 @@ describe('LinkCreator', () => {
       
       // ACT
       const nameInput = screen.getByLabelText('Link Name (Optional)')
-      await user.type(nameInput, 'My Waterfront Collection')
+      await act(async () => {
+        await user.type(nameInput, 'My Waterfront Collection')
+      })
 
       // ASSERT
       expect(nameInput).toHaveValue('My Waterfront Collection')
@@ -210,8 +230,12 @@ describe('LinkCreator', () => {
 
       // ACT
       const nameInput = screen.getByLabelText('Link Name (Optional)')
-      await user.type(nameInput, 'My Collection')
-      await user.click(screen.getByText('Create Link'))
+      await act(async () => {
+        await user.type(nameInput, 'My Collection')
+      })
+      await act(async () => {
+        await user.click(screen.getByText('Create Link'))
+      })
 
       // ASSERT
       expect(LinkService.createLink).toHaveBeenCalledWith(['prop-1', 'prop-2'], 'My Collection')
@@ -227,7 +251,9 @@ describe('LinkCreator', () => {
       const user = await setupStep2()
 
       // ACT
-      await user.click(screen.getByText('Back'))
+      await act(async () => {
+        await user.click(screen.getByText('Back'))
+      })
 
       // ASSERT
       expect(screen.getByText('Step 1: Select Properties')).toBeInTheDocument()
@@ -257,10 +283,18 @@ describe('LinkCreator', () => {
       })
 
       // Navigate through steps
-      await user.click(screen.getByTestId('property-card-prop-1'))
-      await user.click(screen.getByTestId('property-card-prop-2'))
-      await user.click(screen.getByText('Next'))
-      await user.click(screen.getByText('Create Link'))
+      await act(async () => {
+        await user.click(screen.getByTestId('property-card-prop-1'))
+      })
+      await act(async () => {
+        await user.click(screen.getByTestId('property-card-prop-2'))
+      })
+      await act(async () => {
+        await user.click(screen.getByText('Next'))
+      })
+      await act(async () => {
+        await user.click(screen.getByText('Create Link'))
+      })
 
       await waitFor(() => {
         expect(screen.getByText('Step 3: Link Created!')).toBeInTheDocument()
@@ -291,11 +325,17 @@ describe('LinkCreator', () => {
       })
 
       // ACT
-      await user.click(screen.getByText('Copy Link'))
+      await act(async () => {
+        await user.click(screen.getByText('Copy Link'))
+      })
 
       // ASSERT
       expect(mockWriteText).toHaveBeenCalledWith('http://localhost/link/ABC12345')
-      expect(screen.getByText('Copied!')).toBeInTheDocument()
+      
+      // Wait for the "Copied!" text to appear
+      await waitFor(() => {
+        expect(screen.getByText('Copied!')).toBeInTheDocument()
+      })
     })
 
     it('should call onLinkCreated callback with link data', async () => {
@@ -311,7 +351,9 @@ describe('LinkCreator', () => {
       const { user } = await setupStep3()
 
       // ACT
-      await user.click(screen.getByText('Create Another'))
+      await act(async () => {
+        await user.click(screen.getByText('Create Another'))
+      })
 
       // ASSERT
       expect(screen.getByText('Step 1: Select Properties')).toBeInTheDocument()
@@ -350,9 +392,15 @@ describe('LinkCreator', () => {
       })
 
       // Navigate to step 2 and try to create link
-      await user.click(screen.getByTestId('property-card-prop-1'))
-      await user.click(screen.getByText('Next'))
-      await user.click(screen.getByText('Create Link'))
+      await act(async () => {
+        await user.click(screen.getByTestId('property-card-prop-1'))
+      })
+      await act(async () => {
+        await user.click(screen.getByText('Next'))
+      })
+      await act(async () => {
+        await user.click(screen.getByText('Create Link'))
+      })
 
       // ASSERT
       await waitFor(() => {
@@ -368,7 +416,9 @@ describe('LinkCreator', () => {
       render(<LinkCreator onLinkCreated={mockOnLinkCreated} onCancel={mockOnCancel} />)
 
       // ACT
-      await user.click(screen.getByText('Cancel'))
+      await act(async () => {
+        await user.click(screen.getByText('Cancel'))
+      })
 
       // ASSERT
       expect(mockOnCancel).toHaveBeenCalled()
