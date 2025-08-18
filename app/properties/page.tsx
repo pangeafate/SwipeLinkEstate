@@ -2,9 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { PropertyService } from '@/lib/supabase/property.service'
-import PropertyCard from '@/components/agent/PropertyCard'
-import type { Property } from '@/lib/supabase/types'
+import { PropertyService, PropertyCard, type Property } from '@/components/property'
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([])

@@ -2,9 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { PropertyService } from '@/lib/supabase/property.service'
-import PropertyCard from '@/components/agent/PropertyCard'
-import type { Property } from '@/lib/supabase/types'
+import { PropertyService, PropertyCard, type Property } from '@/components/property'
 
 export default function AgentDashboard() {
   const [properties, setProperties] = useState<Property[]>([])
@@ -129,12 +127,16 @@ export default function AgentDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {properties.map(property => (
-              <PropertyCard
+              <div 
                 key={property.id}
-                property={property}
-                selected={selectedProperties.has(property.id)}
-                onClick={() => togglePropertySelection(property.id)}
-              />
+                className={selectedProperties.has(property.id) ? 'ring-2 ring-primary-500 rounded-xl' : ''}
+              >
+                <PropertyCard
+                  property={property}
+                  onClick={() => togglePropertySelection(property.id)}
+                  showActions={true}
+                />
+              </div>
             ))}
           </div>
         )}

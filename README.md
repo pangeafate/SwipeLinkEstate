@@ -83,25 +83,34 @@ npm run test:coverage
 npm run test:e2e
 ```
 
-**Current Test Coverage**: 18/18 tests passing ✅
+**Current Test Coverage**: 28/28 tests passing ✅
 
 ## 📁 Project Structure
 
 ```
 SwipeLinkEstate/
-├── app/                    # Next.js App Router
-│   ├── (agent)/           # Agent dashboard routes
-│   ├── link/[code]/       # Client swipe interface
-│   └── api/               # API endpoints
-├── components/
-│   ├── agent/             # Agent-facing components
-│   ├── client/            # Client-facing components
-│   └── shared/            # Shared components
+├── app/                     # Next.js App Router
+│   ├── (agent)/            # Agent dashboard routes
+│   ├── link/[code]/        # Client swipe interface  
+│   └── api/                # API endpoints
+├── components/             # Modular component system
+│   ├── property/           # Property management module
+│   │   ├── README.md       # Module documentation
+│   │   ├── index.ts        # Public API exports
+│   │   ├── types.ts        # TypeScript interfaces
+│   │   ├── property.service.ts # Business logic
+│   │   ├── components/     # UI components
+│   │   └── __tests__/      # Module tests
+│   ├── link/               # Link management (coming soon)
+│   ├── swipe/              # Client interface (coming soon)
+│   └── analytics/          # Analytics (coming soon)
 ├── lib/
-│   ├── supabase/          # Database client & types
-│   └── utils/             # Utility functions
-├── stores/                # State management
-└── styles/                # Global styles
+│   ├── supabase/           # Database client & schema
+│   └── utils/              # Shared utilities  
+├── public/
+│   └── images/
+│       └── properties/     # Property images
+└── __tests__/              # Integration & E2E tests
 ```
 
 ## 🗄️ Database Schema
@@ -115,19 +124,27 @@ The platform uses the following core tables:
 
 See `lib/supabase/schema.sql` for the complete schema.
 
-## 🔧 Key Services
+## 🔧 Modules
 
-### PropertyService
-- `getAllProperties()` - Get active properties
-- `getProperty(id)` - Get single property  
-- `createProperty()` - Create new property
-- `updateProperty()` - Update existing property
-- `togglePropertyStatus()` - Toggle active/off-market
+### Property Module ✅ 
+- **PropertyService** - CRUD operations for properties ([docs](./components/property/README.md))
+- **PropertyCard** - Display component for property listings
+- **Status**: Complete with full test coverage (10/10 tests passing)
 
-### LinkService (Coming Soon)
-- `createLink()` - Generate shareable links
-- `getLink(code)` - Get link by code
-- `getLinkAnalytics()` - Get engagement metrics
+### Link Module 🚧
+- **LinkService** - Generate and manage shareable property links  
+- **LinkCreator** - Multi-step link creation interface
+- **Status**: Coming next
+
+### Swipe Module 🚧
+- **SwipeService** - Handle swipe gestures and sessions
+- **SwipeContainer** - Tinder-like card interface
+- **Status**: Planned
+
+### Analytics Module 🚧  
+- **AnalyticsService** - Real-time metrics and reporting
+- **Dashboard** - Engagement tracking interface
+- **Status**: Planned
 
 ## 🎨 Design System
 
