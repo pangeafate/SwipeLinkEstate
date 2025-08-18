@@ -1,38 +1,18 @@
-// Property Module Types
-export interface Property {
-  id: string
-  address: string
-  description?: string
-  price?: number
-  bedrooms?: number
-  bathrooms?: number
-  area_sqft?: number
-  property_type?: string
-  status: PropertyStatus
-  images?: string[]
-  features?: string[]
-  created_at?: string
-  updated_at?: string
-}
+// Property Module Types - Re-export from centralized types
+import type { 
+  Property as BaseProperty, 
+  PropertyInsert,
+  PropertyUpdate,
+  PropertyStatus as BasePropertyStatus
+} from '@/lib/supabase/types'
 
-export enum PropertyStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SOLD = 'sold',
-  PENDING = 'pending'
-}
+export type Property = BaseProperty
+export type PropertyFormData = PropertyInsert
+export type PropertyStatus = BasePropertyStatus
 
-export interface PropertyFormData {
-  address: string
-  description?: string
-  price?: number
-  bedrooms?: number
-  bathrooms?: number
-  area_sqft?: number
-  property_type?: string
-  features?: string[]
-}
+export { type PropertyUpdate } from '@/lib/supabase/types'
 
+// Component-specific props interfaces
 export interface PropertyCardProps {
   property: Property
   onClick?: (property: Property) => void

@@ -23,12 +23,22 @@ export default function PropertyCard({
         return 'bg-yellow-500'
       case 'sold':
         return 'bg-blue-500'
+      case 'off-market':
+        return 'bg-orange-500'
       default:
         return 'bg-gray-400'
     }
   }
 
-  const displayFeatures = formatFeatures(property.features || [])
+  // Handle JSON fields from database
+  const features = Array.isArray(property.features) 
+    ? property.features as string[]
+    : (property.features ? JSON.parse(property.features as string) : [])
+  const images = Array.isArray(property.images)
+    ? property.images as string[]
+    : (property.images ? JSON.parse(property.images as string) : [])
+    
+  const displayFeatures = formatFeatures(features)
   const shortAddress = formatShortAddress(property.address)
 
   return (
@@ -40,7 +50,7 @@ export default function PropertyCard({
       {/* Image Section */}
       <div className="relative h-48 w-full">
         <Image
-          src={property.images?.[0] || '/images/properties/sample-1.jpg'}
+          src={property.cover_image || images[0] || '/images/properties/sample-1.jpg'}
           alt={property.address}
           fill
           className="object-cover rounded-t-xl"

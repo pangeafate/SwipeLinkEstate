@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -8,6 +8,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+// Create the client instance
+const supabaseClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey)
 
+// Export the factory function for services
+export function createClient() {
+  return supabaseClient
+}
+
+// Export the client instance for direct use
+export const supabase = supabaseClient
 export default supabase

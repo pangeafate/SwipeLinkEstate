@@ -15,19 +15,19 @@ export default function AnalyticsPage() {
             </div>
             <nav className="flex space-x-4">
               <Link 
-                href="/agent/dashboard" 
+                href="/dashboard" 
                 className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Properties
               </Link>
               <Link 
-                href="/agent/links" 
+                href="/links" 
                 className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Links
               </Link>
               <Link 
-                href="/agent/analytics" 
+                href="/analytics" 
                 className="text-gray-900 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Analytics

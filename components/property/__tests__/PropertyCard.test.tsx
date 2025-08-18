@@ -1,5 +1,6 @@
 // PropertyCard Component Tests
 import { render, screen, fireEvent } from '@testing-library/react'
+import '@testing-library/jest-dom'
 import PropertyCard from '../components/PropertyCard'
 import { PropertyStatus, type Property } from '../types'
 
@@ -11,12 +12,12 @@ const mockProperty: Property = {
   bedrooms: 3,
   bathrooms: 2,
   area_sqft: 1800,
-  property_type: 'Condo',
-  status: PropertyStatus.ACTIVE,
-  images: ['/test-image.jpg'],
-  features: ['Ocean View', 'Balcony', 'Parking'],
-  created_at: '2024-01-01',
-  updated_at: '2024-01-01'
+  status: 'active' as PropertyStatus,
+  cover_image: '/test-image.jpg',
+  images: ['/test-image.jpg'] as any, // Cast to Json type
+  features: ['Ocean View', 'Balcony', 'Parking'] as any, // Cast to Json type
+  created_at: '2024-01-01T00:00:00.000Z',
+  updated_at: '2024-01-01T00:00:00.000Z'
 }
 
 describe('PropertyCard', () => {
@@ -76,7 +77,17 @@ describe('PropertyCard', () => {
     const minimalProperty: Property = {
       id: 'minimal-1',
       address: '456 Test Street',
-      status: PropertyStatus.ACTIVE
+      price: null,
+      bedrooms: null,
+      bathrooms: null,
+      area_sqft: null,
+      description: null,
+      features: null,
+      cover_image: null,
+      images: null,
+      status: 'active' as PropertyStatus,
+      created_at: '2024-01-01T00:00:00.000Z',
+      updated_at: '2024-01-01T00:00:00.000Z'
     }
     
     render(<PropertyCard property={minimalProperty} />)
@@ -89,13 +100,13 @@ describe('PropertyCard', () => {
   })
 
   it('displays different status colors correctly', () => {
-    const pendingProperty = { ...mockProperty, status: PropertyStatus.PENDING }
+    const pendingProperty = { ...mockProperty, status: 'pending' as PropertyStatus }
     const { rerender } = render(<PropertyCard property={pendingProperty} />)
     
     let statusIndicator = screen.getByTestId('status-indicator')
     expect(statusIndicator).toHaveClass('bg-yellow-500')
     
-    const soldProperty = { ...mockProperty, status: PropertyStatus.SOLD }
+    const soldProperty = { ...mockProperty, status: 'sold' as PropertyStatus }
     rerender(<PropertyCard property={soldProperty} />)
     
     statusIndicator = screen.getByTestId('status-indicator')

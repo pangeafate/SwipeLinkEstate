@@ -5,6 +5,6 @@ export type {
   Property, 
   PropertyFormData, 
   PropertyCardProps,
-  PropertyGridProps
+  PropertyGridProps,
+  PropertyStatus
 } from './types'
-export { PropertyStatus } from './types'

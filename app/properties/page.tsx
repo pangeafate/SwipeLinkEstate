@@ -47,7 +47,7 @@ export default function PropertiesPage() {
                 Browse
               </Link>
               <Link 
-                href="/agent/dashboard" 
+                href="/dashboard" 
                 className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Agent Portal

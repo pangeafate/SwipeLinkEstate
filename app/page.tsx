@@ -15,7 +15,7 @@ export default function HomePage() {
           </div>
           
           <div className="space-y-4">
-            <Link href="/agent/dashboard" className="btn-primary w-full block text-center">
+            <Link href="/dashboard" className="btn-primary w-full block text-center">
               Agent Dashboard
             </Link>
             

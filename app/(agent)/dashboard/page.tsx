@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { PropertyService, PropertyCard, type Property } from '@/components/property'
+import { PropertyService, type Property } from '@/components/property'
+import PropertyCard from '@/components/agent/PropertyCard'
 
 export default function AgentDashboard() {
   const [properties, setProperties] = useState<Property[]>([])
@@ -48,19 +49,19 @@ export default function AgentDashboard() {
             </div>
             <nav className="flex space-x-4">
               <Link 
-                href="/agent/dashboard" 
+                href="/dashboard" 
                 className="text-gray-900 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Properties
               </Link>
               <Link 
-                href="/agent/links" 
+                href="/links" 
                 className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Links
               </Link>
               <Link 
-                href="/agent/analytics" 
+                href="/analytics" 
                 className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Analytics
@@ -127,16 +128,16 @@ export default function AgentDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {properties.map(property => (
-              <div 
+              <PropertyCard
                 key={property.id}
-                className={selectedProperties.has(property.id) ? 'ring-2 ring-primary-500 rounded-xl' : ''}
-              >
-                <PropertyCard
-                  property={property}
-                  onClick={() => togglePropertySelection(property.id)}
-                  showActions={true}
-                />
-              </div>
+                property={property}
+                selected={selectedProperties.has(property.id)}
+                onClick={() => togglePropertySelection(property.id)}
+                onEdit={(property) => {
+                  // Handle edit action
+                  console.log('Edit property:', property.id)
+                }}
+              />
             ))}
           </div>
         )}

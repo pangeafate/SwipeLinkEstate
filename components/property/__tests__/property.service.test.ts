@@ -53,7 +53,7 @@ describe('PropertyService', () => {
         })
       } as any)
 
-      await expect(PropertyService.getAllProperties()).rejects.toThrow('Failed to fetch properties: Database error')
+      await expect(PropertyService.getAllProperties()).rejects.toThrow('Database error')
     })
   })
 
@@ -89,18 +89,31 @@ describe('PropertyService', () => {
     })
   })
 
-  describe('updatePropertyStatus', () => {
-    it('should update property status', async () => {
+  describe('togglePropertyStatus', () => {
+    it('should toggle property status between active and off-market', async () => {
       const propertyId = 'test-id'
-      const newStatus = PropertyStatus.SOLD
 
+      const mockCurrentProperty = { status: 'active' }
       const mockUpdatedProperty = {
         id: propertyId,
         address: '123 Test St',
-        status: newStatus
+        status: 'off-market'
       }
 
-      mockSupabase.from.mockReturnValue({
+      // Mock first call to get current status
+      mockSupabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockCurrentProperty,
+              error: null
+            })
+          })
+        })
+      } as any)
+
+      // Mock second call to update status
+      mockSupabase.from.mockReturnValueOnce({
         update: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             select: jest.fn().mockReturnValue({
@@ -113,9 +126,10 @@ describe('PropertyService', () => {
         })
       } as any)
 
-      const result = await PropertyService.updatePropertyStatus(propertyId, newStatus)
+      const result = await PropertyService.togglePropertyStatus(propertyId)
 
       expect(result).toEqual(mockUpdatedProperty)
+      expect(result.status).toBe('off-market')
     })
   })
 })

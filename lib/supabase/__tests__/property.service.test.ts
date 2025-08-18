@@ -29,25 +29,24 @@ describe('PropertyService', () => {
           bathrooms: 2.0,
           area_sqft: 1500,
           description: 'Test property',
-          features: ['parking', 'pool'],
+          features: ['parking', 'pool'] as any, // Cast to Json type
           cover_image: null,
-          images: [],
+          images: [] as any, // Cast to Json type
           status: 'active',
           created_at: '2023-01-01T00:00:00.000Z',
           updated_at: '2023-01-01T00:00:00.000Z',
         },
       ]
 
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            order: jest.fn().mockResolvedValue({
-              data: mockProperties,
-              error: null,
-            }),
-          }),
-        }),
-      } as any)
+      // @ts-expect-error Mock typing issue
+      const mockOrder = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: mockProperties,
+        error: null,
+      })
+      const mockEq = jest.fn().mockReturnValue({ order: mockOrder })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { select: mockSelect }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
 
       // ACT
       const result = await PropertyService.getAllProperties()
@@ -59,16 +58,15 @@ describe('PropertyService', () => {
 
     it('should throw error when database query fails', async () => {
       // ARRANGE
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            order: jest.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Database error' },
-            }),
-          }),
-        }),
-      } as any)
+      // @ts-expect-error Mock typing issue
+      const mockOrder = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: null,
+        error: { message: 'Database error' },
+      })
+      const mockEq = jest.fn().mockReturnValue({ order: mockOrder })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { select: mockSelect }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
 
       // ACT & ASSERT
       await expect(PropertyService.getAllProperties()).rejects.toThrow('Database error')
@@ -87,24 +85,23 @@ describe('PropertyService', () => {
         bathrooms: 2.0,
         area_sqft: 1500,
         description: 'Test property',
-        features: ['parking', 'pool'],
+        features: ['parking', 'pool'] as any, // Cast to Json type
         cover_image: null,
-        images: [],
+        images: [] as any, // Cast to Json type
         status: 'active',
         created_at: '2023-01-01T00:00:00.000Z',
         updated_at: '2023-01-01T00:00:00.000Z',
       }
 
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: mockProperty,
-              error: null,
-            }),
-          }),
-        }),
-      } as any)
+      // @ts-expect-error Mock typing issue
+      const mockSingle = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: mockProperty,
+        error: null,
+      })
+      const mockEq = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { select: mockSelect }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
 
       // ACT
       const result = await PropertyService.getProperty(propertyId)
@@ -116,16 +113,15 @@ describe('PropertyService', () => {
 
     it('should throw error when property not found', async () => {
       // ARRANGE
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Property not found' },
-            }),
-          }),
-        }),
-      } as any)
+      // @ts-expect-error Mock typing issue
+      const mockSingle = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: null,
+        error: { message: 'Property not found' },
+      })
+      const mockEq = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { select: mockSelect }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
 
       // ACT & ASSERT
       await expect(PropertyService.getProperty('nonexistent')).rejects.toThrow('Property not found')
@@ -142,29 +138,34 @@ describe('PropertyService', () => {
         bathrooms: 3.0,
         area_sqft: 2000,
         description: 'New test property',
-        features: ['garage', 'garden'],
+        features: ['garage', 'garden'] as any, // Cast to Json type
       }
 
       const createdProperty: Property = {
         id: '2',
-        ...propertyData,
+        address: propertyData.address,
+        price: propertyData.price!,
+        bedrooms: propertyData.bedrooms!,
+        bathrooms: propertyData.bathrooms!,
+        area_sqft: propertyData.area_sqft!,
+        description: propertyData.description!,
+        features: propertyData.features!,
         cover_image: null,
-        images: [],
+        images: [] as any, // Cast to Json type
         status: 'active',
         created_at: '2023-01-01T00:00:00.000Z',
         updated_at: '2023-01-01T00:00:00.000Z',
       }
 
-      mockSupabase.from.mockReturnValue({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: createdProperty,
-              error: null,
-            }),
-          }),
-        }),
-      } as any)
+      // @ts-expect-error Mock typing issue
+      const mockSingle = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: createdProperty,
+        error: null,
+      })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockInsert = jest.fn().mockReturnValue({ select: mockSelect })
+      const mockQueryBuilder = { insert: mockInsert }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
 
       // ACT
       const result = await PropertyService.createProperty(propertyData)
@@ -178,16 +179,15 @@ describe('PropertyService', () => {
       // ARRANGE
       const invalidData = {} as PropertyInsert
 
-      mockSupabase.from.mockReturnValue({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Invalid property data' },
-            }),
-          }),
-        }),
-      } as any)
+      // @ts-expect-error Mock typing issue
+      const mockSingle = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: null,
+        error: { message: 'Invalid property data' },
+      })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockInsert = jest.fn().mockReturnValue({ select: mockSelect })
+      const mockQueryBuilder = { insert: mockInsert }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
 
       // ACT & ASSERT
       await expect(PropertyService.createProperty(invalidData)).rejects.toThrow('Invalid property data')
@@ -208,26 +208,24 @@ describe('PropertyService', () => {
         bathrooms: 2.0,
         area_sqft: 1500,
         description: 'Updated description',
-        features: ['parking', 'pool'],
+        features: ['parking', 'pool'] as any, // Cast to Json type
         cover_image: null,
-        images: [],
+        images: [] as any, // Cast to Json type
         status: 'active',
         created_at: '2023-01-01T00:00:00.000Z',
         updated_at: '2023-01-02T00:00:00.000Z',
       }
 
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            select: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({
-                data: updatedProperty,
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      } as any)
+      // @ts-expect-error Mock typing issue
+      const mockSingle = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: updatedProperty,
+        error: null,
+      })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockEq = jest.fn().mockReturnValue({ select: mockSelect })
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { update: mockUpdate }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
 
       // ACT
       const result = await PropertyService.updateProperty(propertyId, updateData)
@@ -249,34 +247,36 @@ describe('PropertyService', () => {
         bathrooms: 2.0,
         area_sqft: 1500,
         description: 'Test property',
-        features: ['parking', 'pool'],
+        features: ['parking', 'pool'] as any, // Cast to Json type
         cover_image: null,
-        images: [],
+        images: [] as any, // Cast to Json type
         status: 'off-market',
         created_at: '2023-01-01T00:00:00.000Z',
         updated_at: '2023-01-01T00:00:00.000Z',
       }
 
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: { status: 'active' },
-              error: null,
-            }),
-          }),
-        }),
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            select: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({
-                data: toggledProperty,
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      } as any)
+      // @ts-expect-error Mock typing issue
+      const mockSingleForStatus = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: { status: 'active' },
+        error: null,
+      })
+      const mockEqForStatus = jest.fn().mockReturnValue({ single: mockSingleForStatus })
+      const mockSelectForStatus = jest.fn().mockReturnValue({ eq: mockEqForStatus })
+
+      // @ts-expect-error Mock typing issue
+      const mockSingleForUpdate = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: toggledProperty,
+        error: null,
+      })
+      const mockSelectForUpdate = jest.fn().mockReturnValue({ single: mockSingleForUpdate })
+      const mockEqForUpdate = jest.fn().mockReturnValue({ select: mockSelectForUpdate })
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqForUpdate })
+
+      const mockQueryBuilder = {
+        select: mockSelectForStatus,
+        update: mockUpdate
+      }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
 
       // ACT
       const result = await PropertyService.togglePropertyStatus(propertyId)
