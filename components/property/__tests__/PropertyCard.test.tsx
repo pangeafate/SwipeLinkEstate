@@ -112,4 +112,153 @@ describe('PropertyCard', () => {
     statusIndicator = screen.getByTestId('status-indicator')
     expect(statusIndicator).toHaveClass('bg-blue-500')
   })
+
+  it('displays off-market status color correctly', () => {
+    const offMarketProperty = { ...mockProperty, status: 'off-market' as PropertyStatus }
+    render(<PropertyCard property={offMarketProperty} />)
+    
+    const statusIndicator = screen.getByTestId('status-indicator')
+    expect(statusIndicator).toHaveClass('bg-orange-500')
+  })
+
+  it('displays default status color for unknown status', () => {
+    const unknownStatusProperty = { 
+      ...mockProperty, 
+      status: 'unknown-status' as any 
+    }
+    render(<PropertyCard property={unknownStatusProperty} />)
+    
+    const statusIndicator = screen.getByTestId('status-indicator')
+    expect(statusIndicator).toHaveClass('bg-gray-400')
+  })
+
+  it('handles JSON string features correctly', () => {
+    const propertyWithJsonFeatures = {
+      ...mockProperty,
+      features: JSON.stringify(['Parking', 'Garden', 'Pool'])
+    }
+    
+    render(<PropertyCard property={propertyWithJsonFeatures} />)
+    
+    expect(screen.getByText('Parking')).toBeInTheDocument()
+    expect(screen.getByText('Garden')).toBeInTheDocument()
+    expect(screen.getByText('Pool')).toBeInTheDocument()
+  })
+
+  it('handles JSON string images correctly', () => {
+    const propertyWithJsonImages = {
+      ...mockProperty,
+      cover_image: null,
+      images: JSON.stringify(['https://example.com/img1.jpg', 'https://example.com/img2.jpg'])
+    }
+    
+    render(<PropertyCard property={propertyWithJsonImages} />)
+    
+    const image = screen.getByRole('img')
+    expect(image).toHaveAttribute('src', expect.stringContaining('img1.jpg'))
+  })
+
+
+  it('handles null features gracefully', () => {
+    const propertyWithNullFeatures = {
+      ...mockProperty,
+      features: null
+    }
+    
+    render(<PropertyCard property={propertyWithNullFeatures} />)
+    
+    // Should not display any features
+    expect(screen.queryByText('Ocean View')).not.toBeInTheDocument()
+  })
+
+  it('handles null images gracefully', () => {
+    const propertyWithNullImages = {
+      ...mockProperty,
+      cover_image: null,
+      images: null
+    }
+    
+    render(<PropertyCard property={propertyWithNullImages} />)
+    
+    // Should use placeholder image
+    const image = screen.getByRole('img')
+    expect(image).toHaveAttribute('src', expect.stringContaining('sample-1.jpg'))
+  })
+
+  it('handles empty features array', () => {
+    const propertyWithEmptyFeatures = {
+      ...mockProperty,
+      features: []
+    }
+    
+    render(<PropertyCard property={propertyWithEmptyFeatures} />)
+    
+    // Features section should not be rendered
+    expect(screen.queryByText('Ocean View')).not.toBeInTheDocument()
+  })
+
+  it('handles empty images array', () => {
+    const propertyWithEmptyImages = {
+      ...mockProperty,
+      cover_image: null,
+      images: []
+    }
+    
+    render(<PropertyCard property={propertyWithEmptyImages} />)
+    
+    // Should use placeholder image
+    const image = screen.getByRole('img')
+    expect(image).toHaveAttribute('src', expect.stringContaining('sample-1.jpg'))
+  })
+
+  it('does not call onClick when onClick is not provided', () => {
+    render(<PropertyCard property={mockProperty} />)
+    
+    const card = screen.getByTestId('property-card')
+    // Should not throw an error when clicked
+    expect(() => {
+      fireEvent.click(card)
+    }).not.toThrow()
+  })
+
+  it('displays exactly 3 features when more than 3 exist', () => {
+    const propertyWithManyFeatures = {
+      ...mockProperty,
+      features: ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 5', 'Feature 6'] as any
+    }
+    
+    render(<PropertyCard property={propertyWithManyFeatures} />)
+    
+    expect(screen.getByText('Feature 1')).toBeInTheDocument()
+    expect(screen.getByText('Feature 2')).toBeInTheDocument()
+    expect(screen.getByText('Feature 3')).toBeInTheDocument()
+    expect(screen.getByText('+3 more')).toBeInTheDocument()
+    expect(screen.queryByText('Feature 4')).not.toBeInTheDocument()
+  })
+
+  it('handles missing description', () => {
+    const propertyWithoutDescription = {
+      ...mockProperty,
+      description: null
+    }
+    
+    render(<PropertyCard property={propertyWithoutDescription} />)
+    
+    // Should still render other elements
+    expect(screen.getByText('$1,200,000')).toBeInTheDocument()
+    expect(screen.getByText('123 Ocean Drive, Miami Beach')).toBeInTheDocument()
+  })
+
+  it('uses fallback image when both cover_image and images[0] are unavailable', () => {
+    const propertyWithoutImages = {
+      ...mockProperty,
+      cover_image: null,
+      images: []
+    }
+    
+    render(<PropertyCard property={propertyWithoutImages} />)
+    
+    const image = screen.getByRole('img')
+    expect(image).toHaveAttribute('src', expect.stringContaining('/images/properties/sample-1.jpg'))
+  })
 })

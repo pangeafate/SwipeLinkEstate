@@ -83,7 +83,7 @@ npm run test:coverage
 npm run test:e2e
 ```
 
-**Current Test Status**: 92/92 tests passing ✅ (63.38% code coverage)
+**Current Test Status**: 262 total tests (232 passing, 30 failing) ⚠️
 
 ## 📁 Project Structure
 
@@ -101,7 +101,7 @@ SwipeLinkEstate/
 │   │   ├── property.service.ts # Business logic
 │   │   ├── components/     # UI components
 │   │   └── __tests__/      # Module tests
-│   ├── link/               # Link management (coming soon)
+│   ├── link/               # Link management ✅
 │   ├── swipe/              # Client interface (coming soon)
 │   └── analytics/          # Analytics (coming soon)
 ├── lib/
@@ -129,7 +129,7 @@ See `lib/supabase/schema.sql` for the complete schema.
 ### Property Module ✅ 
 - **PropertyService** - CRUD operations for properties ([docs](./components/property/README.md))
 - **PropertyCard** - Display component for property listings
-- **Status**: Complete with full test coverage (20/20 tests passing)
+- **Status**: Complete with comprehensive test coverage (tests implemented and working)
 
 ### Link Module ✅
 - **LinkService** - Generate and manage shareable property links ([docs](./components/link/README.md))

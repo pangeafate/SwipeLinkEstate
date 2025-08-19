@@ -6,7 +6,8 @@ import LinkCreator from '../LinkCreator'
 // Mock the LinkService
 jest.mock('../../link.service', () => ({
   LinkService: {
-    createLink: jest.fn()
+    createLink: jest.fn(),
+    copyLinkUrl: jest.fn()
   }
 }))
 
@@ -28,7 +29,7 @@ const mockProperties = [
     bedrooms: 2,
     bathrooms: 2.0,
     area_sqft: 1200,
-    cover_image: 'image1.jpg',
+    cover_image: '/images/properties/image1.jpg',
     status: 'active'
   },
   {
@@ -38,7 +39,7 @@ const mockProperties = [
     bedrooms: 3,
     bathrooms: 2.5,
     area_sqft: 1800,
-    cover_image: 'image2.jpg',
+    cover_image: '/images/properties/image2.jpg',
     status: 'active'
   },
   {
@@ -48,7 +49,7 @@ const mockProperties = [
     bedrooms: 1,
     bathrooms: 1.0,
     area_sqft: 900,
-    cover_image: 'image3.jpg',
+    cover_image: '/images/properties/image3.jpg',
     status: 'active'
   }
 ]
@@ -132,7 +133,7 @@ describe('LinkCreator', () => {
 
       // ASSERT - Next button should be disabled initially
       const nextButton = screen.getByText('Next')
-      expect(nextButton).toBeDisabled()
+      expect(nextButton.closest('button')).toBeDisabled()
 
       // ACT - Select a property
       const firstPropertyCard = screen.getByTestId('property-card-prop-1')
@@ -141,7 +142,7 @@ describe('LinkCreator', () => {
       })
 
       // ASSERT - Next button should be enabled
-      expect(nextButton).toBeEnabled()
+      expect(nextButton.closest('button')).toBeEnabled()
     })
 
     it('should proceed to step 2 when Next clicked', async () => {
@@ -162,8 +163,8 @@ describe('LinkCreator', () => {
       })
 
       // ASSERT
-      expect(screen.getByText('Step 2: Link Details')).toBeInTheDocument()
-      expect(screen.getByLabelText('Link Name (Optional)')).toBeInTheDocument()
+      expect(screen.getByText('Step 2: Customize your link')).toBeInTheDocument()
+      expect(screen.getByLabelText('Collection Name (Optional)')).toBeInTheDocument()
     })
   })
 
@@ -195,7 +196,7 @@ describe('LinkCreator', () => {
       await setupStep2()
 
       // ASSERT
-      expect(screen.getByText('2 properties selected')).toBeInTheDocument()
+      expect(screen.getByText('2 properties in this collection')).toBeInTheDocument()
       expect(screen.getByText('123 Ocean Drive')).toBeInTheDocument()
       expect(screen.getByText('456 Beach Ave')).toBeInTheDocument()
     })
@@ -205,7 +206,7 @@ describe('LinkCreator', () => {
       const user = await setupStep2()
       
       // ACT
-      const nameInput = screen.getByLabelText('Link Name (Optional)')
+      const nameInput = screen.getByLabelText('Collection Name (Optional)')
       await act(async () => {
         await user.type(nameInput, 'My Waterfront Collection')
       })
@@ -229,7 +230,7 @@ describe('LinkCreator', () => {
       ;(LinkService.createLink as jest.Mock).mockResolvedValue(mockCreatedLink)
 
       // ACT
-      const nameInput = screen.getByLabelText('Link Name (Optional)')
+      const nameInput = screen.getByLabelText('Collection Name (Optional)')
       await act(async () => {
         await user.type(nameInput, 'My Collection')
       })
@@ -242,7 +243,7 @@ describe('LinkCreator', () => {
       
       // Should proceed to step 3
       await waitFor(() => {
-        expect(screen.getByText('Step 3: Link Created!')).toBeInTheDocument()
+        expect(screen.getByText('Link Created Successfully!')).toBeInTheDocument()
       })
     })
 
@@ -297,7 +298,7 @@ describe('LinkCreator', () => {
       })
 
       await waitFor(() => {
-        expect(screen.getByText('Step 3: Link Created!')).toBeInTheDocument()
+        expect(screen.getByText('Link Created Successfully!')).toBeInTheDocument()
       })
 
       return { user, mockCreatedLink }
@@ -307,30 +308,26 @@ describe('LinkCreator', () => {
       // ARRANGE & ACT
       await setupStep3()
 
-      // ASSERT
-      expect(screen.getByText('Your link has been created successfully!')).toBeInTheDocument()
+      // ASSERT  
+      expect(screen.getByText('Link Created Successfully!')).toBeInTheDocument()
       expect(screen.getByDisplayValue('http://localhost/link/ABC12345')).toBeInTheDocument()
-      expect(screen.getByText('Copy Link')).toBeInTheDocument()
+      expect(screen.getByText('Copy')).toBeInTheDocument()
     })
 
     it('should copy link when Copy Link button clicked', async () => {
       // ARRANGE
       const { user } = await setupStep3()
       
-      // Mock clipboard
-      const mockWriteText = jest.fn().mockResolvedValue(undefined)
-      Object.defineProperty(navigator, 'clipboard', {
-        value: { writeText: mockWriteText },
-        writable: true
-      })
+      // Mock the LinkService.copyLinkUrl method
+      ;(LinkService.copyLinkUrl as jest.Mock).mockResolvedValue(undefined)
 
       // ACT
       await act(async () => {
-        await user.click(screen.getByText('Copy Link'))
+        await user.click(screen.getByText('Copy'))
       })
 
       // ASSERT
-      expect(mockWriteText).toHaveBeenCalledWith('http://localhost/link/ABC12345')
+      expect(LinkService.copyLinkUrl).toHaveBeenCalledWith('ABC12345')
       
       // Wait for the "Copied!" text to appear
       await waitFor(() => {
@@ -352,13 +349,14 @@ describe('LinkCreator', () => {
 
       // ACT
       await act(async () => {
-        await user.click(screen.getByText('Create Another'))
+        await user.click(screen.getByText('Create Another Link'))
       })
 
       // ASSERT
       expect(screen.getByText('Step 1: Select Properties')).toBeInTheDocument()
-      // Should reset selected properties
-      expect(screen.getByText('Next')).toBeDisabled()
+      // Should reset selected properties - check if Next button exists but is disabled
+      const nextButton = screen.getByText('Next')
+      expect(nextButton.closest('button')).toBeDisabled()
     })
   })
 

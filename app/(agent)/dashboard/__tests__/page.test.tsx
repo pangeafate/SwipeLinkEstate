@@ -49,6 +49,29 @@ jest.mock('@/components/agent/PropertyCard', () => {
   return MockPropertyCard
 })
 
+// Mock PropertyForm component
+jest.mock('@/components/property/components/PropertyForm', () => {
+  const MockPropertyForm = ({ 
+    onPropertyCreated, 
+    onCancel 
+  }: { 
+    onPropertyCreated: (property: any) => void; 
+    onCancel: () => void 
+  }) => {
+    return (
+      <div data-testid="property-form-modal">
+        <h2>Add New Property</h2>
+        <button onClick={onCancel}>Cancel</button>
+        <button onClick={() => onPropertyCreated({ id: 'new-prop', address: 'Test Address' })}>
+          Create Property
+        </button>
+      </div>
+    )
+  }
+  MockPropertyForm.displayName = 'MockPropertyForm'
+  return MockPropertyForm
+})
+
 import { PropertyService } from '@/components/property'
 
 const mockProperties = [
@@ -335,5 +358,121 @@ describe('AgentDashboard', () => {
     // Use getAllByText since "Properties" appears in nav and section heading
     const propertiesTexts = screen.getAllByText('Properties')
     expect(propertiesTexts).toHaveLength(2) // One in nav, one as section heading
+  })
+
+  it('should show PropertyForm modal when Add Property button is clicked', async () => {
+    // ARRANGE
+    const user = userEvent.setup()
+    await act(async () => {
+      render(<AgentDashboard />)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Add Property')).toBeInTheDocument()
+    })
+
+    // Verify modal is not initially visible
+    expect(screen.queryByTestId('property-form-modal')).not.toBeInTheDocument()
+
+    // ACT - Click Add Property button
+    const addPropertyButton = screen.getByText('Add Property')
+    await act(async () => {
+      await user.click(addPropertyButton)
+    })
+
+    // ASSERT - Modal should appear
+    expect(screen.getByTestId('property-form-modal')).toBeInTheDocument()
+    expect(screen.getByText('Add New Property')).toBeInTheDocument()
+  })
+
+  it('should show PropertyForm modal when Add Your First Property button is clicked', async () => {
+    // ARRANGE - Mock empty properties to show empty state
+    ;(PropertyService.getAllProperties as jest.Mock).mockResolvedValue([])
+    const user = userEvent.setup()
+    
+    await act(async () => {
+      render(<AgentDashboard />)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Add Your First Property')).toBeInTheDocument()
+    })
+
+    // Verify modal is not initially visible
+    expect(screen.queryByTestId('property-form-modal')).not.toBeInTheDocument()
+
+    // ACT - Click Add Your First Property button
+    const addFirstPropertyButton = screen.getByText('Add Your First Property')
+    await act(async () => {
+      await user.click(addFirstPropertyButton)
+    })
+
+    // ASSERT - Modal should appear
+    expect(screen.getByTestId('property-form-modal')).toBeInTheDocument()
+    expect(screen.getByText('Add New Property')).toBeInTheDocument()
+  })
+
+  it('should close PropertyForm modal when Cancel is clicked', async () => {
+    // ARRANGE
+    const user = userEvent.setup()
+    await act(async () => {
+      render(<AgentDashboard />)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Add Property')).toBeInTheDocument()
+    })
+
+    // ACT - Open modal
+    const addPropertyButton = screen.getByText('Add Property')
+    await act(async () => {
+      await user.click(addPropertyButton)
+    })
+
+    expect(screen.getByTestId('property-form-modal')).toBeInTheDocument()
+
+    // ACT - Cancel modal
+    const cancelButton = screen.getByText('Cancel')
+    await act(async () => {
+      await user.click(cancelButton)
+    })
+
+    // ASSERT - Modal should be hidden
+    expect(screen.queryByTestId('property-form-modal')).not.toBeInTheDocument()
+  })
+
+  it('should add new property and close modal when property is created', async () => {
+    // ARRANGE
+    const user = userEvent.setup()
+    await act(async () => {
+      render(<AgentDashboard />)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Add Property')).toBeInTheDocument()
+    })
+
+    // Verify initial property count
+    expect(screen.getByText('123 Ocean Drive')).toBeInTheDocument()
+    expect(screen.getByText('456 Beach Ave')).toBeInTheDocument()
+    expect(screen.getByText('789 Park Lane')).toBeInTheDocument()
+
+    // ACT - Open modal
+    const addPropertyButton = screen.getByText('Add Property')
+    await act(async () => {
+      await user.click(addPropertyButton)
+    })
+
+    expect(screen.getByTestId('property-form-modal')).toBeInTheDocument()
+
+    // ACT - Create property
+    const createButton = screen.getByText('Create Property')
+    await act(async () => {
+      await user.click(createButton)
+    })
+
+    // ASSERT - Modal should be hidden and new property added
+    expect(screen.queryByTestId('property-form-modal')).not.toBeInTheDocument()
+    expect(screen.getByText('Test Address')).toBeInTheDocument()
   })
 })

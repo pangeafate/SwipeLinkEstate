@@ -148,7 +148,7 @@ const getStatusColor = () => {
     case 'active':      return 'bg-green-500'   // Available for sale
     case 'pending':     return 'bg-yellow-500'  // Under contract  
     case 'sold':        return 'bg-blue-500'    // Transaction complete
-    case 'off-market':  return 'bg-gray-400'    // Temporarily unavailable
+    case 'off-market':  return 'bg-orange-500'  // Temporarily unavailable
     default:            return 'bg-gray-400'    // Unknown status
   }
 }
@@ -159,7 +159,7 @@ const getStatusColor = () => {
 ● Green  = Active (available for viewing/purchase)
 ● Yellow = Pending (offer accepted, awaiting closing)  
 ● Blue   = Sold (transaction completed)
-● Gray   = Off-market (temporarily unavailable)
+● Orange = Off-market (temporarily unavailable)
 ```
 
 **IMPORTANT**: Status values now match actual database schema:
@@ -297,9 +297,9 @@ The component is designed with mobile-first principles:
 
 ### Image Sources Priority
 ```
-1. property.images[0]              (Primary image)
+1. property.cover_image            (Cover image)
    ↓ (if not available)
-2. property.cover_image            (Cover image)  
+2. property.images[0]              (First image from array)  
    ↓ (if not available)
 3. '/images/properties/sample-1.jpg' (Default fallback)
 ```
@@ -312,7 +312,7 @@ The component is designed with mobile-first principles:
 │  ● Green = Active      Available for viewing     │
 │  ● Yellow = Pending    Under contract           │  
 │  ● Blue = Sold         Transaction complete     │
-│  ● Gray = Off-market   Temporarily unavailable  │
+│  ● Orange = Off-market Temporarily unavailable  │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -508,7 +508,7 @@ The PropertyCard component has comprehensive test coverage:
 - ✅ Maintains aspect ratio across screen sizes
 - ✅ Touch targets meet accessibility standards
 
-**15/15 tests passing**
+**Comprehensive test coverage implemented**
 
 ## Usage Examples
 

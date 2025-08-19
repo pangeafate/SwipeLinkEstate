@@ -58,11 +58,11 @@ export default function PropertyCard({
 
   return (
     <div
-      data-testid="property-card"
+      data-testid={property.id ? `property-card-${property.id}` : 'property-card'}
       onClick={handleCardClick}
       className={`
         bg-white rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer group
-        ${selected ? 'ring-2 ring-primary-500' : ''}
+        ${selected ? 'ring-2 ring-primary-500 border-2 border-blue-500' : ''}
         ${property.status === 'off-market' ? 'opacity-75' : ''}
       `}
     >

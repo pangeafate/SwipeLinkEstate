@@ -4,11 +4,14 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { PropertyService, type Property } from '@/components/property'
 import PropertyCard from '@/components/agent/PropertyCard'
+import PropertyForm from '@/components/property/components/PropertyForm'
+import PropertyDebug from '@/components/debug/PropertyDebug'
 
 export default function AgentDashboard() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedProperties, setSelectedProperties] = useState<Set<string>>(new Set())
+  const [showPropertyForm, setShowPropertyForm] = useState(false)
 
   useEffect(() => {
     loadProperties()
@@ -33,6 +36,19 @@ export default function AgentDashboard() {
       newSelection.add(propertyId)
     }
     setSelectedProperties(newSelection)
+  }
+
+  const handleAddProperty = () => {
+    setShowPropertyForm(true)
+  }
+
+  const handlePropertyCreated = (newProperty: Property) => {
+    setProperties(prev => [newProperty, ...prev])
+    setShowPropertyForm(false)
+  }
+
+  const handleCancelPropertyForm = () => {
+    setShowPropertyForm(false)
   }
 
   return (
@@ -73,6 +89,10 @@ export default function AgentDashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Debug Component - Remove after debugging */}
+        <div className="mb-8">
+          <PropertyDebug />
+        </div>
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
@@ -109,7 +129,7 @@ export default function AgentDashboard() {
                 </button>
               </>
             )}
-            <button className="btn-primary">
+            <button className="btn-primary" onClick={handleAddProperty}>
               Add Property
             </button>
           </div>
@@ -123,7 +143,7 @@ export default function AgentDashboard() {
         ) : properties.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <div className="text-gray-500 mb-4">No properties found</div>
-            <button className="btn-primary">Add Your First Property</button>
+            <button className="btn-primary" onClick={handleAddProperty}>Add Your First Property</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -140,6 +160,14 @@ export default function AgentDashboard() {
               />
             ))}
           </div>
+        )}
+
+        {/* Property Form Modal */}
+        {showPropertyForm && (
+          <PropertyForm
+            onPropertyCreated={handlePropertyCreated}
+            onCancel={handleCancelPropertyForm}
+          />
         )}
       </main>
     </div>

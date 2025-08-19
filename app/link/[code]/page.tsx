@@ -3,24 +3,33 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { LinkService } from '@/components/link'
-import { PropertyCard } from '@/components/property'
-import type { LinkWithProperties } from '@/lib/supabase/types'
+import { SwipeInterface, SwipeService, type PropertyCardData, type SwipeState } from '@/components/swipe'
+import type { LinkWithProperties, Property } from '@/lib/supabase/types'
 
 export default function ClientLinkPage() {
   const params = useParams()
   const linkCode = params.code as string
   
   const [linkData, setLinkData] = useState<LinkWithProperties | null>(null)
+  const [sessionId, setSessionId] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [swipeComplete, setSwipeComplete] = useState(false)
+  const [finalState, setFinalState] = useState<SwipeState | null>(null)
 
   useEffect(() => {
-    const loadLink = async () => {
+    const initializeLinkAndSession = async () => {
       try {
         setLoading(true)
         setError(null)
+        
+        // Load link data
         const data = await LinkService.getLink(linkCode)
         setLinkData(data)
+        
+        // Initialize swipe session
+        const session = await SwipeService.initializeSession(linkCode)
+        setSessionId(session.id)
       } catch (err) {
         setError('Link not found or expired. Please check the link code and try again.')
       } finally {
@@ -29,9 +38,33 @@ export default function ClientLinkPage() {
     }
 
     if (linkCode) {
-      loadLink()
+      initializeLinkAndSession()
     }
   }, [linkCode])
+
+  // Convert Property type to PropertyCardData type  
+  const convertToPropertyCardData = (property: Property): PropertyCardData => ({
+    id: property.id,
+    address: property.address,
+    price: property.price || 0,
+    bedrooms: property.bedrooms || 0,
+    bathrooms: property.bathrooms || 0,
+    area_sqft: property.area_sqft || undefined,
+    cover_image: property.cover_image || undefined,
+    images: property.images as string[] || undefined,
+    features: property.features as string[] || undefined,
+    property_type: 'house' // Default since not in database schema yet
+  })
+
+  const handleSwipeComplete = (finalSwipeState: SwipeState) => {
+    setFinalState(finalSwipeState)
+    setSwipeComplete(true)
+  }
+
+  const handleSwipe = (direction: string, propertyId: string) => {
+    // Could add analytics tracking here
+    console.log(`Swiped ${direction} on property ${propertyId}`)
+  }
 
   if (loading) {
     return (
@@ -65,6 +98,19 @@ export default function ClientLinkPage() {
     )
   }
 
+  if (linkData?.properties && linkData.properties.length > 0 && sessionId && !swipeComplete) {
+    const propertyCardData = linkData.properties.map(convertToPropertyCardData)
+    
+    return (
+      <SwipeInterface
+        properties={propertyCardData}
+        sessionId={sessionId}
+        onSwipeComplete={handleSwipeComplete}
+        onSwipe={handleSwipe}
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -83,34 +129,62 @@ export default function ClientLinkPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Collection Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {linkData?.name || 'Property Collection'}
-          </h1>
-          <p className="text-gray-600">
-            {linkData?.properties.length} {linkData?.properties.length === 1 ? 'property' : 'properties'} curated for you
-          </p>
-          <div className="mt-4 flex items-center text-sm text-gray-500">
-            <span>Link Code: {linkCode}</span>
-          </div>
-        </div>
+        {swipeComplete && finalState ? (
+          /* Completion Summary */
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="text-6xl mb-6">🎉</div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                Thanks for browsing!
+              </h1>
+              <p className="text-gray-600 mb-8">
+                You've finished reviewing {linkData?.name || 'this property collection'}. 
+                Here's a summary of your choices:
+              </p>
+              
+              <div className="grid grid-cols-3 gap-6 mb-8">
+                <div className="text-center p-6 bg-green-50 rounded-xl">
+                  <div className="text-3xl mb-2">❤️</div>
+                  <div className="text-2xl font-bold text-green-600">{finalState.liked.length}</div>
+                  <div className="text-sm text-gray-600">Liked</div>
+                </div>
+                <div className="text-center p-6 bg-yellow-50 rounded-xl">
+                  <div className="text-3xl mb-2">🤔</div>
+                  <div className="text-2xl font-bold text-yellow-600">{finalState.considering.length}</div>
+                  <div className="text-sm text-gray-600">Considering</div>
+                </div>
+                <div className="text-center p-6 bg-red-50 rounded-xl">
+                  <div className="text-3xl mb-2">❌</div>
+                  <div className="text-2xl font-bold text-red-600">{finalState.disliked.length}</div>
+                  <div className="text-sm text-gray-600">Passed</div>
+                </div>
+              </div>
 
-        {/* Properties Grid */}
-        {linkData?.properties && linkData.properties.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {linkData.properties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                onClick={(property) => {
-                  // In the future, this could open a property detail modal or navigate to detail page
-                  console.log('Property clicked:', property.id)
-                }}
-              />
-            ))}
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  Your preferences have been saved. An agent will follow up with you soon 
+                  about the properties you liked and are considering.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  >
+                    Browse Again
+                  </button>
+                  <a
+                    href="/"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Explore More Properties
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : (
+        ) : linkData?.properties && linkData.properties.length === 0 ? (
+          /* Empty State */
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <div className="text-gray-400 mb-4">
               <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,19 +194,13 @@ export default function ClientLinkPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">No Properties Available</h3>
             <p className="text-gray-600">This property collection is currently empty.</p>
           </div>
-        )}
-
-        {/* Footer */}
-        <div className="mt-12 pt-8 border-t border-gray-200 text-center">
-          <p className="text-gray-500 text-sm">
-            Interested in these properties? Contact your agent for more information.
-          </p>
-          <div className="mt-4">
-            <a href="/" className="text-primary-600 hover:text-primary-700 font-medium">
-              Discover More Properties →
-            </a>
+        ) : (
+          /* Loading/Initializing State */
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Preparing your property collection...</p>
           </div>
-        </div>
+        )}
       </main>
     </div>
   )
