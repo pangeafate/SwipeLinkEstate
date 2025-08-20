@@ -1,8 +1,56 @@
-# LinkCreator Component - README
+# LinkCreator Component Suite - README
 
 ## Overview
 
-The LinkCreator is a React component that provides a user-friendly, 3-step wizard interface for real estate agents to create shareable property collection links. It guides users through property selection, link customization, and provides immediate access to the generated link.
+The LinkCreator is a modular React component suite that provides a user-friendly, 3-step wizard interface for real estate agents to create shareable property collection links. It guides users through property selection, link customization, and provides immediate access to the generated link.
+
+## Modular Architecture
+
+Following README-driven development guidelines, the LinkCreator has been refactored into focused, maintainable components:
+
+```
+LinkCreator/
+├── LinkCreator.tsx           (68 lines)   - Main orchestrator
+├── PropertySelector.tsx      (96 lines)   - Property selection & grid display
+├── LinkCustomizer.tsx        (111 lines)  - Link details & name customization  
+├── LinkShareForm.tsx         (100 lines)  - Success, sharing & copy functionality
+└── hooks/
+    └── useLinkCreatorState.ts (155 lines) - State management logic
+```
+
+Each component is under the 200-line limit, promoting maintainability and focused responsibility.
+
+### Component Responsibilities
+
+**LinkCreator.tsx** (Main Orchestrator)
+- Manages step navigation and current step state
+- Renders appropriate step component based on current step
+- Passes state and handlers from custom hook to step components
+- Provides consistent layout wrapper for all steps
+
+**PropertySelector.tsx** (Property Selection)
+- Displays property grid with loading/error states
+- Handles property selection interactions  
+- Shows selection count and validation
+- Next/Cancel navigation controls
+
+**LinkCustomizer.tsx** (Link Details & Customization)
+- Shows selected properties summary
+- Provides link name input form
+- Handles form validation and submission
+- Back/Create navigation controls
+
+**LinkShareForm.tsx** (Success & Sharing)
+- Displays created link details with shareable URL
+- Copy to clipboard functionality with success feedback
+- Success animations and messaging
+- Create Another/Complete workflow actions
+
+**useLinkCreatorState.ts** (State Management)
+- Centralized state management for all steps
+- API service integration (PropertyService, LinkService)
+- Event handlers for user interactions
+- Side effects (loading, copying, timers)
 
 ## Purpose
 
@@ -22,12 +70,17 @@ This component eliminates the complexity of link creation by breaking it down in
 ├─────────────────────────────────────────────────┤
 │              COMPONENT LAYER                     │
 │  ┌─────────────────────────────────────────────┐ │
-│  │         LinkCreator (THIS)                  │ │
-│  │  • 3-step wizard UI                         │ │
-│  │  • Property selection logic                 │ │
-│  │  • Form validation                          │ │
-│  │  • State management                         │ │
+│  │         LinkCreator (Main)                  │ │
+│  │  • Step orchestration & navigation         │ │
+│  │  • Props passing to step components        │ │
 │  └─────────────────────────────────────────────┘ │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌─────────────────┐ │
+│  │Step1 │ │Step2 │ │Step3 │ │useLinkCreator   │ │
+│  │Props │ │Link  │ │Share │ │State Hook       │ │
+│  │Select│ │Details│ │Link │ │• State logic    │ │
+│  └──────┘ └──────┘ └──────┘ │• Event handlers │ │
+│                             │• Service calls  │ │
+│                             └─────────────────┘ │
 ├─────────────────────────────────────────────────┤
 │               SERVICE LAYER                      │
 │  ┌─────────────────────────────────────────────┐ │
