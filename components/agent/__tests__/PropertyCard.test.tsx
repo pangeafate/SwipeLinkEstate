@@ -77,7 +77,7 @@ describe('PropertyCard', () => {
     render(<PropertyCard property={mockProperty} onClick={handleClick} />)
     
     // ACT
-    fireEvent.click(screen.getByTestId('property-card'))
+    fireEvent.click(screen.getByTestId('property-card-1'))
     
     // ASSERT
     await waitFor(() => {
@@ -104,7 +104,7 @@ describe('PropertyCard', () => {
     render(<PropertyCard property={mockProperty} selected={true} />)
     
     // ASSERT
-    const card = screen.getByTestId('property-card')
+    const card = screen.getByTestId('property-card-1')
     // @ts-expect-error Jest DOM matchers
     expect(card).toHaveClass('ring-2', 'ring-primary-500')
   })
@@ -281,7 +281,7 @@ describe('PropertyCard', () => {
     render(<PropertyCard property={offMarketProperty} />)
     
     // ASSERT
-    const card = screen.getByTestId('property-card')
+    const card = screen.getByTestId('property-card-1')
     // @ts-expect-error Jest DOM matchers
     expect(card).toHaveClass('opacity-75')
   })

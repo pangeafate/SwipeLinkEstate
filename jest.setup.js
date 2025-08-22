@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom'
 
+// Import shared test utilities for global setup
+import { SupabaseMockFactory } from './test/mocks/supabase.js'
+import { mockModules } from './test/mocks/components.js'
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter() {
@@ -19,22 +23,11 @@ jest.mock('next/navigation', () => ({
   },
 }))
 
-// Mock Supabase client
+// Mock Supabase client using our centralized factory
+// This provides a default success scenario with empty data
+// Individual tests can override this by importing and using SupabaseMockFactory
 jest.mock('./lib/supabase/client', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      insert: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      update: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      delete: jest.fn(() => Promise.resolve({ data: [], error: null })),
-    })),
-    storage: {
-      from: jest.fn(() => ({
-        upload: jest.fn(() => Promise.resolve({ data: null, error: null })),
-        remove: jest.fn(() => Promise.resolve({ data: null, error: null })),
-      })),
-    },
-  },
+  supabase: SupabaseMockFactory.createSuccessMock([])
 }))
 
 // Mock window.matchMedia for responsive components
@@ -58,4 +51,36 @@ global.IntersectionObserver = class IntersectionObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
+}
+
+// Mock common component libraries using our centralized mocks
+// Tests can override these on a per-test basis if needed
+jest.mock('next/image', () => mockModules['next/image'])
+jest.mock('next/link', () => mockModules['next/link'])
+jest.mock('next/head', () => mockModules['next/head'])
+
+// Set up global test environment variables
+process.env.NODE_ENV = 'test'
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-key'
+
+// Global afterEach cleanup
+afterEach(() => {
+  // Clear all mocks after each test to prevent test pollution
+  jest.clearAllMocks()
+})
+
+// Console suppression for cleaner test output
+// Individual tests can re-enable console methods if needed for debugging
+if (process.env.NODE_ENV === 'test') {
+  global.console = {
+    ...console,
+    // Suppress console.log in tests unless explicitly needed
+    log: jest.fn(),
+    // Keep error and warn for debugging
+    error: console.error,
+    warn: console.warn,
+    info: console.info,
+    debug: jest.fn(),
+  }
 }

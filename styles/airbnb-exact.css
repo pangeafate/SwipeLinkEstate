@@ -1,0 +1,360 @@
+/**
+ * Exact Airbnb Design System
+ * Based on actual Airbnb.com screenshot analysis
+ */
+
+:root {
+  /* Airbnb Exact Colors */
+  --airbnb-red: #FF385C;           /* Primary brand color */
+  --airbnb-red-dark: #E31C5F;      /* Hover state */
+  --airbnb-black: #222222;         /* Primary text */
+  --airbnb-gray-dark: #717171;     /* Secondary text */
+  --airbnb-gray: #B0B0B0;          /* Tertiary text */
+  --airbnb-gray-light: #F7F7F7;    /* Background */
+  --airbnb-white: #FFFFFF;         /* Cards/surfaces */
+  --airbnb-border: #DDDDDD;        /* Borders */
+  
+  /* Typography */
+  --font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  
+  /* Sizing */
+  --border-radius-small: 8px;
+  --border-radius-medium: 12px;
+  --border-radius-large: 16px;
+  --border-radius-xl: 24px;
+}
+
+/* Global Typography */
+body {
+  font-family: var(--font-family);
+  color: var(--airbnb-black);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Airbnb Card Styles */
+.airbnb-card {
+  cursor: pointer;
+  display: block;
+  position: relative;
+}
+
+.airbnb-card-image {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--border-radius-medium);
+  background: var(--airbnb-gray-light);
+}
+
+.airbnb-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.airbnb-card:hover .airbnb-card-image img {
+  transform: scale(1.04);
+}
+
+/* Heart Icon */
+.airbnb-heart-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1;
+}
+
+.airbnb-heart-icon {
+  width: 24px;
+  height: 24px;
+  stroke: white;
+  stroke-width: 2;
+  overflow: visible;
+  fill: rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+}
+
+.airbnb-heart-icon.liked {
+  fill: var(--airbnb-red);
+}
+
+.airbnb-heart-button:hover .airbnb-heart-icon {
+  transform: scale(1.1);
+}
+
+/* Guest Favorite Badge */
+.airbnb-guest-favorite {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: white;
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--airbnb-black);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  z-index: 1;
+}
+
+/* Card Content */
+.airbnb-card-content {
+  padding-top: 12px;
+}
+
+.airbnb-card-title {
+  font-size: 15px;
+  line-height: 19px;
+  font-weight: 600;
+  color: var(--airbnb-black);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.airbnb-card-subtitle {
+  font-size: 15px;
+  line-height: 19px;
+  color: var(--airbnb-gray-dark);
+  margin: 2px 0;
+}
+
+.airbnb-card-details {
+  font-size: 15px;
+  line-height: 19px;
+  color: var(--airbnb-gray-dark);
+  margin: 2px 0;
+}
+
+.airbnb-card-price {
+  font-size: 15px;
+  line-height: 19px;
+  margin-top: 6px;
+}
+
+.airbnb-card-price-amount {
+  font-weight: 600;
+  color: var(--airbnb-black);
+}
+
+.airbnb-card-price-period {
+  font-weight: 400;
+  color: var(--airbnb-black);
+}
+
+/* Carousel Container */
+.airbnb-carousel {
+  position: relative;
+  margin: 0 -24px;
+  padding: 0 24px;
+}
+
+.airbnb-carousel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.airbnb-carousel-title {
+  font-size: 22px;
+  line-height: 26px;
+  font-weight: 600;
+  color: var(--airbnb-black);
+  margin: 0;
+}
+
+.airbnb-carousel-arrow {
+  font-size: 22px;
+  color: var(--airbnb-black);
+  margin-left: 8px;
+}
+
+/* Scroll Container */
+.airbnb-scroll-container {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px; /* For focus outlines */
+}
+
+.airbnb-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Navigation Buttons */
+.airbnb-nav-button {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.18);
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.airbnb-nav-button:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.airbnb-nav-button.left {
+  left: -16px;
+}
+
+.airbnb-nav-button.right {
+  right: -16px;
+}
+
+.airbnb-nav-button svg {
+  width: 12px;
+  height: 12px;
+  fill: var(--airbnb-black);
+}
+
+/* Grid Layout for Static View */
+.airbnb-property-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 550px) {
+  .airbnb-property-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .airbnb-property-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1128px) {
+  .airbnb-property-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .airbnb-property-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Responsive Card Sizing */
+.airbnb-card-wrapper {
+  flex: 0 0 auto;
+  width: calc(50% - 12px);
+}
+
+@media (min-width: 768px) {
+  .airbnb-card-wrapper {
+    width: calc(33.333% - 16px);
+  }
+}
+
+@media (min-width: 1128px) {
+  .airbnb-card-wrapper {
+    width: calc(25% - 18px);
+  }
+}
+
+@media (min-width: 1440px) {
+  .airbnb-card-wrapper {
+    width: calc(20% - 19.2px);
+  }
+}
+
+/* Photo Dots for Multiple Images */
+.airbnb-photo-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+}
+
+.airbnb-photo-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  transition: background 0.2s ease;
+}
+
+.airbnb-photo-dot.active {
+  background: white;
+}
+
+/* Accessibility */
+.airbnb-card:focus-visible {
+  outline: 2px solid var(--airbnb-black);
+  outline-offset: 2px;
+  border-radius: var(--border-radius-medium);
+}
+
+.airbnb-heart-button:focus-visible {
+  outline: 2px solid var(--airbnb-black);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+/* Loading Skeleton */
+.airbnb-skeleton {
+  animation: airbnb-shimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    var(--airbnb-gray-light) 0%,
+    #e0e0e0 50%,
+    var(--airbnb-gray-light) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--border-radius-medium);
+}
+
+@keyframes airbnb-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Smooth Scroll for Mobile */
+@media (max-width: 767px) {
+  .airbnb-scroll-container {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .airbnb-card-wrapper {
+    scroll-snap-align: start;
+  }
+}

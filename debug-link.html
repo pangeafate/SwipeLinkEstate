@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Link Page</title>
+</head>
+<body>
+    <h1>Debug Link Page</h1>
+    <div id="status">Loading...</div>
+    <div id="error"></div>
+    <pre id="data"></pre>
+    
+    <script>
+        async function debugLink() {
+            const statusEl = document.getElementById('status');
+            const errorEl = document.getElementById('error');
+            const dataEl = document.getElementById('data');
+            
+            try {
+                // Navigate to the link page
+                statusEl.textContent = 'Fetching page...';
+                const response = await fetch('http://localhost:3001/link/awNmi9jF');
+                const html = await response.text();
+                
+                statusEl.textContent = `Page loaded: ${response.status}`;
+                
+                // Check if it contains the loading message
+                if (html.includes('Loading property collection')) {
+                    statusEl.textContent += ' - Page is stuck in loading state';
+                }
+                
+                if (html.includes('property-carousel')) {
+                    statusEl.textContent += ' - Carousel found!';
+                }
+                
+                if (html.includes('Link Not Found')) {
+                    statusEl.textContent += ' - Link not found error';
+                }
+                
+                // Show first 500 chars of HTML
+                dataEl.textContent = html.substring(0, 500) + '...';
+                
+            } catch (error) {
+                errorEl.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        debugLink();
+    </script>
+</body>
+</html>

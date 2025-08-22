@@ -1,6 +1,11 @@
+/**
+ * Optimized PropertyCard component
+ * Performance improvements: memoized JSON parsing, error handling, image optimization
+ */
 'use client'
 
 import Image from 'next/image'
+import { useMemo, useState } from 'react'
 import type { Property } from '@/lib/supabase/types'
 import { formatPrice, formatBedsBaths, formatArea, formatShortAddress, formatFeatures } from '@/lib/utils/formatters'
 
@@ -17,6 +22,8 @@ export default function PropertyCard({
   onClick, 
   onEdit 
 }: PropertyCardProps) {
+  const [imageError, setImageError] = useState(false)
+
   const handleCardClick = () => {
     if (onClick) {
       onClick(property)
@@ -28,6 +35,10 @@ export default function PropertyCard({
     if (onEdit) {
       onEdit(property)
     }
+  }
+
+  const handleImageError = () => {
+    setImageError(true)
   }
 
   const getStatusColor = () => {
@@ -45,16 +56,57 @@ export default function PropertyCard({
     }
   }
 
-  // Handle JSON fields from database
-  const features = Array.isArray(property.features) 
-    ? property.features as string[]
-    : (property.features ? JSON.parse(property.features as string) : [])
-  const images = Array.isArray(property.images)
-    ? property.images as string[]
-    : (property.images ? JSON.parse(property.images as string) : [])
+  // Memoized JSON parsing with error handling
+  const { features, images, imageSrc } = useMemo(() => {
+    // Safe JSON parse helper
+    const safeJsonParse = (jsonString: string | any[]): any[] => {
+      if (Array.isArray(jsonString)) {
+        return jsonString
+      }
+      if (!jsonString || typeof jsonString !== 'string') {
+        return []
+      }
+      try {
+        return JSON.parse(jsonString)
+      } catch {
+        return []
+      }
+    }
+
+    const parsedFeatures = safeJsonParse(property.features || [])
+    const parsedImages = safeJsonParse(property.images || [])
     
-  const displayFeatures = formatFeatures(features)
-  const shortAddress = formatShortAddress(property.address)
+    // Determine image source with fallback strategy
+    let imageSrc = '/images/properties/sample-1.jpg' // Default fallback
+    
+    if (!imageError) {
+      if (property.cover_image) {
+        imageSrc = property.cover_image
+      } else if (parsedImages.length > 0) {
+        imageSrc = parsedImages[0]
+      }
+    }
+
+    return {
+      features: parsedFeatures,
+      images: parsedImages,
+      imageSrc
+    }
+  }, [property.features, property.images, property.cover_image, imageError])
+
+  // Memoized formatted data
+  const formattedData = useMemo(() => {
+    const displayFeatures = formatFeatures(features)
+    const shortAddress = formatShortAddress(property.address)
+    
+    return {
+      displayFeatures,
+      shortAddress,
+      price: formatPrice(property.price),
+      bedsBaths: formatBedsBaths(property.bedrooms, property.bathrooms),
+      area: formatArea(property.area_sqft)
+    }
+  }, [features, property.address, property.price, property.bedrooms, property.bathrooms, property.area_sqft])
 
   return (
     <div
@@ -69,11 +121,15 @@ export default function PropertyCard({
       {/* Image Section */}
       <div className="relative h-48 w-full">
         <Image
-          src={property.cover_image || images[0] || '/images/properties/sample-1.jpg'}
+          src={imageSrc}
           alt={property.address}
           fill
           className="object-cover rounded-t-xl"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          onError={handleImageError}
+          loading="lazy"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         />
         
         {/* Status Indicator */}
@@ -88,7 +144,7 @@ export default function PropertyCard({
         {/* Price Badge */}
         <div className="absolute top-3 right-3 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg px-3 py-1">
           <span className="font-bold text-gray-900">
-            {formatPrice(property.price)}
+            {formattedData.price}
           </span>
         </div>
 
@@ -109,19 +165,19 @@ export default function PropertyCard({
       <div className="p-4">
         {/* Address */}
         <h3 className="font-semibold text-gray-900 text-lg mb-2 line-clamp-2">
-          {shortAddress}
+          {formattedData.shortAddress}
         </h3>
 
         {/* Property Details */}
         <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
-          <span>{formatBedsBaths(property.bedrooms, property.bathrooms)}</span>
-          <span>{formatArea(property.area_sqft)}</span>
+          <span>{formattedData.bedsBaths}</span>
+          <span>{formattedData.area}</span>
         </div>
 
         {/* Features */}
-        {displayFeatures.length > 0 && (
+        {formattedData.displayFeatures.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {displayFeatures.slice(0, 3).map((feature, index) => (
+            {formattedData.displayFeatures.slice(0, 3).map((feature, index) => (
               <span
                 key={index}
                 className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded"
@@ -129,9 +185,9 @@ export default function PropertyCard({
                 {feature}
               </span>
             ))}
-            {displayFeatures.length > 3 && (
+            {formattedData.displayFeatures.length > 3 && (
               <span className="inline-block text-gray-500 text-xs px-2 py-1">
-                +{displayFeatures.length - 3} more
+                +{formattedData.displayFeatures.length - 3} more
               </span>
             )}
           </div>

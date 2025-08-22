@@ -6,10 +6,19 @@ jest.mock('@/lib/supabase/client', () => ({
   supabase: {
     from: jest.fn(() => ({
       insert: jest.fn(() => ({
-        select: jest.fn(() => Promise.resolve({ data: null, error: null }))
+        select: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: { id: '1' }, error: null }))
+        }))
+      })),
+      upsert: jest.fn(() => ({
+        select: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: { id: 'session-1' }, error: null }))
+        }))
       })),
       select: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
+        eq: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: { link_id: 'test-link' }, error: null }))
+        }))
       }))
     }))
   }

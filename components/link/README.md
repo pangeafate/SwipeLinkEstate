@@ -55,11 +55,23 @@ link/
 ├── index.ts                      # Public exports
 ├── link.service.ts               # Business logic & database operations
 ├── components/                   # UI components
-│   ├── LinkCreator.tsx          # 3-step link creation wizard
-│   └── LinkCreator-README.md    # Detailed component documentation
-└── __tests__/                   # Comprehensive test suite
-    ├── link.service.test.ts     # Service layer tests
-    └── LinkCreator.test.tsx     # Component tests
+│   ├── LinkCreator.tsx          # Original wizard (348 lines - DEPRECATED)
+│   ├── LinkCreatorV2.tsx        # New compliant orchestrator (106 lines) ✅
+│   ├── PropertySelector.tsx     # Step 1: Property selection (111 lines) ✅
+│   ├── LinkDetails.tsx          # Step 2: Link configuration (111 lines) ✅
+│   ├── LinkSuccess.tsx          # Step 3: Success state (100 lines) ✅
+│   ├── LinkCreator-README.md    # Detailed component documentation
+│   ├── hooks/
+│   │   └── useLinkCreation.ts   # State management hook (104 lines) ✅
+│   └── __tests__/               # Component tests
+│       ├── LinkCreator.test.tsx
+│       ├── LinkCreatorV2.test.tsx
+│       ├── PropertySelector.test.tsx
+│       ├── LinkDetails.test.tsx
+│       ├── LinkSuccess.test.tsx
+│       └── useLinkCreation.test.tsx
+└── __tests__/                   # Service tests
+    └── link.service.test.ts
 ```
 
 ## Database Schema Integration
@@ -276,9 +288,137 @@ const handleCreateLink = async () => {
 }
 ```
 
+## Refactored Components (2025-08-19)
+
+### LinkCreatorV2 Architecture
+Following TDD methodology, the original 348-line LinkCreator.tsx was refactored into a multi-step wizard pattern:
+
+#### LinkCreatorV2.tsx (106 lines) ✅
+**Purpose**: Main orchestrator component for the 3-step wizard
+**Features**:
+- Coordinates step components and state management
+- Handles property loading and error states
+- Maintains all original functionality
+- Complies with 200-line limit
+
+```tsx
+import LinkCreatorV2 from '@/components/link/components/LinkCreatorV2'
+
+<LinkCreatorV2
+  onLinkCreated={handleLinkCreated}
+  onCancel={handleCancel}
+/>
+```
+
+#### PropertySelector.tsx (111 lines) ✅
+**Purpose**: Step 1 - Property selection with grid display
+**Features**:
+- Loads and displays properties using PropertyCard
+- Multi-select functionality with visual feedback
+- Selection count display
+- Next/Cancel navigation
+
+```tsx
+import PropertySelector from '@/components/link/components/PropertySelector'
+
+<PropertySelector
+  selectedPropertyIds={selectedIds}
+  onPropertySelect={handlePropertySelect}
+  onNext={handleNext}
+  onCancel={handleCancel}
+/>
+```
+
+#### LinkDetails.tsx (111 lines) ✅
+**Purpose**: Step 2 - Link configuration and naming
+**Features**:
+- Selected properties summary display
+- Optional collection name input
+- Back/Create navigation
+- Loading states during link creation
+
+```tsx
+import LinkDetails from '@/components/link/components/LinkDetails'
+
+<LinkDetails
+  properties={properties}
+  selectedPropertyIds={selectedIds}
+  linkName={linkName}
+  loading={loading}
+  error={error}
+  onBack={handleBack}
+  onCreateLink={handleCreateLink}
+  onLinkNameChange={handleLinkNameChange}
+/>
+```
+
+#### LinkSuccess.tsx (100 lines) ✅
+**Purpose**: Step 3 - Success state with sharing options
+**Features**:
+- Link creation success confirmation
+- Shareable URL display and copy functionality
+- Link details summary
+- Create another link option
+
+```tsx
+import LinkSuccess from '@/components/link/components/LinkSuccess'
+
+<LinkSuccess
+  link={createdLink}
+  selectedPropertyCount={selectedIds.length}
+  copySuccess={copySuccess}
+  onCopyLink={handleCopyLink}
+  onCreateAnother={handleCreateAnother}
+/>
+```
+
+#### useLinkCreation.ts (104 lines) ✅
+**Purpose**: Custom hook for centralized state management
+**Features**:
+- Step navigation logic
+- Property selection state
+- Link creation workflow
+- Error and loading state management
+
+```tsx
+import useLinkCreation from '@/components/link/components/hooks/useLinkCreation'
+
+const {
+  step,
+  selectedPropertyIds,
+  linkName,
+  createdLink,
+  loading,
+  error,
+  copySuccess,
+  handlePropertySelect,
+  handleNext,
+  handleBack,
+  handleLinkNameChange,
+  handleCreateLink,
+  handleCopyLink,
+  handleCreateAnother
+} = useLinkCreation()
+```
+
+### Migration Strategy
+- ✅ **LinkCreatorV2**: Use for all new link creation workflows
+- ⚠️ **LinkCreator**: Original deprecated, remove after migration complete
+- ✅ **Step Components**: Reusable for other multi-step workflows
+- ✅ **useLinkCreation**: Extend for other link-related functionality
+
+### Testing Coverage
+All refactored components include comprehensive test suites:
+- Unit tests for individual step components
+- Integration tests for complete wizard flow
+- State management hook testing
+- Error handling and edge cases
+- User interaction testing
+
 ## Related Documentation
 
 - **[LinkService README](./LinkService-README.md)** - Detailed service documentation
 - **[LinkCreator README](./components/LinkCreator-README.md)** - Component implementation guide
 - **[Property Module](../property/README.md)** - Property system integration
 - **[Database Schema](../../lib/supabase/types.ts)** - Type definitions and schema
+- **[MEMORY.md](../../MEMORY.md)** - Architectural decisions and patterns

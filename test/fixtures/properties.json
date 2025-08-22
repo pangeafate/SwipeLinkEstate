@@ -1,0 +1,210 @@
+[
+  {
+    "id": "prop-1",
+    "address": "123 Oak Street",
+    "price": 485000,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "area_sqft": 1650,
+    "property_type": "house",
+    "status": "active",
+    "description": "Charming 3-bedroom home with modern updates and a spacious backyard. Perfect for families looking for comfort and style.",
+    "features": ["garage", "garden", "hardwood_floors", "updated_kitchen"],
+    "cover_image": "/images/properties/house-1.jpg",
+    "images": [
+      "/images/properties/house-1.jpg",
+      "/images/properties/house-1-kitchen.jpg",
+      "/images/properties/house-1-bedroom.jpg",
+      "/images/properties/house-1-backyard.jpg"
+    ],
+    "created_at": "2023-10-01T10:00:00.000Z",
+    "updated_at": "2023-10-01T10:00:00.000Z"
+  },
+  {
+    "id": "prop-2",
+    "address": "456 Pine Avenue",
+    "price": 325000,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "area_sqft": 950,
+    "property_type": "apartment",
+    "status": "active",
+    "description": "Cozy 2-bedroom apartment in a vibrant neighborhood. Close to public transportation and local amenities.",
+    "features": ["parking", "balcony", "air_conditioning"],
+    "cover_image": "/images/properties/apartment-1.jpg",
+    "images": [
+      "/images/properties/apartment-1.jpg",
+      "/images/properties/apartment-1-living.jpg",
+      "/images/properties/apartment-1-bedroom.jpg"
+    ],
+    "created_at": "2023-10-02T14:30:00.000Z",
+    "updated_at": "2023-10-02T14:30:00.000Z"
+  },
+  {
+    "id": "prop-3",
+    "address": "789 Maple Drive",
+    "price": 750000,
+    "bedrooms": 4,
+    "bathrooms": 3,
+    "area_sqft": 2200,
+    "property_type": "house",
+    "status": "active",
+    "description": "Spacious family home with luxury finishes throughout. Features a chef's kitchen and master suite with walk-in closet.",
+    "features": ["garage", "fireplace", "walk_in_closet", "updated_kitchen", "deck", "laundry_room"],
+    "cover_image": "/images/properties/house-2.jpg",
+    "images": [
+      "/images/properties/house-2.jpg",
+      "/images/properties/house-2-kitchen.jpg",
+      "/images/properties/house-2-master.jpg",
+      "/images/properties/house-2-deck.jpg",
+      "/images/properties/house-2-fireplace.jpg"
+    ],
+    "created_at": "2023-10-03T09:15:00.000Z",
+    "updated_at": "2023-10-03T09:15:00.000Z"
+  },
+  {
+    "id": "prop-4",
+    "address": "321 Elm Street",
+    "price": 195000,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "area_sqft": 650,
+    "property_type": "condo",
+    "status": "active",
+    "description": "Modern studio condo perfect for first-time buyers or investors. Recently renovated with contemporary fixtures.",
+    "features": ["parking", "balcony"],
+    "cover_image": "/images/properties/condo-1.jpg",
+    "images": [
+      "/images/properties/condo-1.jpg",
+      "/images/properties/condo-1-kitchen.jpg",
+      "/images/properties/condo-1-balcony.jpg"
+    ],
+    "created_at": "2023-10-04T16:45:00.000Z",
+    "updated_at": "2023-10-04T16:45:00.000Z"
+  },
+  {
+    "id": "prop-5",
+    "address": "654 Cedar Lane",
+    "price": 1200000,
+    "bedrooms": 5,
+    "bathrooms": 4,
+    "area_sqft": 3500,
+    "property_type": "house",
+    "status": "active",
+    "description": "Luxury estate home with premium amenities including pool, home theater, and wine cellar. Set on a private 2-acre lot.",
+    "features": ["pool", "garage", "fireplace", "walk_in_closet", "basement", "deck", "patio", "laundry_room"],
+    "cover_image": "/images/properties/luxury-1.jpg",
+    "images": [
+      "/images/properties/luxury-1.jpg",
+      "/images/properties/luxury-1-pool.jpg",
+      "/images/properties/luxury-1-kitchen.jpg",
+      "/images/properties/luxury-1-theater.jpg",
+      "/images/properties/luxury-1-wine-cellar.jpg",
+      "/images/properties/luxury-1-master.jpg"
+    ],
+    "created_at": "2023-10-05T11:20:00.000Z",
+    "updated_at": "2023-10-05T11:20:00.000Z"
+  },
+  {
+    "id": "prop-6",
+    "address": "987 Birch Boulevard",
+    "price": 425000,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "area_sqft": 1400,
+    "property_type": "townhouse",
+    "status": "active",
+    "description": "Well-maintained townhouse in a family-friendly community. Features include a finished basement and private patio.",
+    "features": ["parking", "patio", "basement", "laundry_room"],
+    "cover_image": "/images/properties/townhouse-1.jpg",
+    "images": [
+      "/images/properties/townhouse-1.jpg",
+      "/images/properties/townhouse-1-living.jpg",
+      "/images/properties/townhouse-1-basement.jpg",
+      "/images/properties/townhouse-1-patio.jpg"
+    ],
+    "created_at": "2023-10-06T13:10:00.000Z",
+    "updated_at": "2023-10-06T13:10:00.000Z"
+  },
+  {
+    "id": "prop-7",
+    "address": "147 Willow Court",
+    "price": 275000,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "area_sqft": 850,
+    "property_type": "apartment",
+    "status": "inactive",
+    "description": "Affordable 2-bedroom apartment with recent updates. Great starter home or rental investment property.",
+    "features": ["parking", "air_conditioning"],
+    "cover_image": "/images/properties/apartment-2.jpg",
+    "images": [
+      "/images/properties/apartment-2.jpg",
+      "/images/properties/apartment-2-bedroom.jpg"
+    ],
+    "created_at": "2023-10-07T08:30:00.000Z",
+    "updated_at": "2023-10-07T08:30:00.000Z"
+  },
+  {
+    "id": "prop-8",
+    "address": "258 Spruce Street",
+    "price": 650000,
+    "bedrooms": 4,
+    "bathrooms": 2,
+    "area_sqft": 1850,
+    "property_type": "house",
+    "status": "active",
+    "description": "Character home with original hardwood floors and period details. Large lot with mature landscaping.",
+    "features": ["garage", "garden", "hardwood_floors", "fireplace"],
+    "cover_image": "/images/properties/character-1.jpg",
+    "images": [
+      "/images/properties/character-1.jpg",
+      "/images/properties/character-1-living.jpg",
+      "/images/properties/character-1-garden.jpg",
+      "/images/properties/character-1-fireplace.jpg"
+    ],
+    "created_at": "2023-10-08T15:45:00.000Z",
+    "updated_at": "2023-10-08T15:45:00.000Z"
+  },
+  {
+    "id": "prop-9",
+    "address": "369 Aspen Avenue",
+    "price": 380000,
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "area_sqft": 1100,
+    "property_type": "condo",
+    "status": "active",
+    "description": "Modern condo with floor-to-ceiling windows and city views. Building amenities include gym and rooftop terrace.",
+    "features": ["parking", "balcony", "air_conditioning"],
+    "cover_image": "/images/properties/modern-condo-1.jpg",
+    "images": [
+      "/images/properties/modern-condo-1.jpg",
+      "/images/properties/modern-condo-1-view.jpg",
+      "/images/properties/modern-condo-1-kitchen.jpg"
+    ],
+    "created_at": "2023-10-09T12:00:00.000Z",
+    "updated_at": "2023-10-09T12:00:00.000Z"
+  },
+  {
+    "id": "prop-10",
+    "address": "741 Hickory Heights",
+    "price": 525000,
+    "bedrooms": 3,
+    "bathrooms": 3,
+    "area_sqft": 1750,
+    "property_type": "townhouse",
+    "status": "active",
+    "description": "End-unit townhouse with extra windows and privacy. Features include granite countertops and stainless steel appliances.",
+    "features": ["garage", "patio", "updated_kitchen", "laundry_room"],
+    "cover_image": "/images/properties/end-unit-1.jpg",
+    "images": [
+      "/images/properties/end-unit-1.jpg",
+      "/images/properties/end-unit-1-kitchen.jpg",
+      "/images/properties/end-unit-1-patio.jpg",
+      "/images/properties/end-unit-1-garage.jpg"
+    ],
+    "created_at": "2023-10-10T10:30:00.000Z",
+    "updated_at": "2023-10-10T10:30:00.000Z"
+  }
+]

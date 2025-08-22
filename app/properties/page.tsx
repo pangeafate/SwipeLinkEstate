@@ -1,17 +1,47 @@
 'use client'
 
-import Link from 'next/link'
+/**
+ * Properties Browse Page
+ * Main page for browsing all available properties
+ * 
+ * Architecture Notes:
+ * - Client-side rendered for interactive filtering
+ * - Tracks anonymous browsing sessions
+ * - Components extracted for maintainability
+ */
+
 import { useState, useEffect } from 'react'
 import { PropertyService, PropertyCard, type Property } from '@/components/property'
+import { AnalyticsService } from '@/lib/analytics/analytics.service'
+import { PropertiesHeader } from './PropertiesHeader'
+import { PropertiesFilterBar } from './PropertiesFilterBar'
+import { PropertyDetailModal } from './PropertyDetailModal'
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
+  const [sessionId] = useState(() => AnalyticsService.generateSessionId())
 
   useEffect(() => {
     loadProperties()
-  }, [])
+    
+    // Initialize anonymous browsing session
+    AnalyticsService.createSession({
+      sessionId,
+      deviceInfo: AnalyticsService.getDeviceInfo()
+    }).catch(error => console.error('Failed to create session:', error))
+  }, [sessionId])
+
+  // Update session activity periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      AnalyticsService.updateSessionActivity(sessionId)
+        .catch(error => console.error('Failed to update session activity:', error))
+    }, 30000) // Update every 30 seconds
+
+    return () => clearInterval(interval)
+  }, [sessionId])
 
   const loadProperties = async () => {
     try {
@@ -24,38 +54,23 @@ export default function PropertiesPage() {
     }
   }
 
+  const handlePropertyClick = (property: Property) => {
+    setSelectedProperty(property)
+    // Track property view when modal opens
+    AnalyticsService.trackView({
+      propertyId: property.id,
+      sessionId,
+      metadata: {
+        viewType: 'detail_modal',
+        source: 'properties_page',
+        timestamp: new Date().toISOString()
+      }
+    }).catch(error => console.error('Failed to track property view:', error))
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-gray-900">
-              SwipeLink Estate
-            </Link>
-            <nav className="flex space-x-4">
-              <Link 
-                href="/" 
-                className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Home
-              </Link>
-              <Link 
-                href="/properties" 
-                className="text-gray-900 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Browse
-              </Link>
-              <Link 
-                href="/dashboard" 
-                className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Agent Portal
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <PropertiesHeader />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary-50 to-primary-100 py-12">
@@ -71,34 +86,7 @@ export default function PropertiesPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filter Bar */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex flex-wrap gap-4">
-            <select className="input">
-              <option>All Types</option>
-              <option>Apartment</option>
-              <option>House</option>
-              <option>Condo</option>
-            </select>
-            <select className="input">
-              <option>Any Price</option>
-              <option>Under $500k</option>
-              <option>$500k - $1M</option>
-              <option>$1M - $2M</option>
-              <option>Over $2M</option>
-            </select>
-            <select className="input">
-              <option>Any Beds</option>
-              <option>1+ bed</option>
-              <option>2+ beds</option>
-              <option>3+ beds</option>
-              <option>4+ beds</option>
-            </select>
-            <button className="btn-primary">
-              Apply Filters
-            </button>
-          </div>
-        </div>
+        <PropertiesFilterBar />
 
         {/* Results Count */}
         <div className="flex justify-between items-center mb-6">
@@ -131,61 +119,17 @@ export default function PropertiesPage() {
               <div key={property.id} className="transform hover:scale-105 transition-transform duration-200">
                 <PropertyCard
                   property={property}
-                  onClick={(p) => setSelectedProperty(p)}
+                  onClick={handlePropertyClick}
                 />
               </div>
             ))}
           </div>
         )}
 
-        {/* Property Detail Modal (placeholder for now) */}
-        {selectedProperty && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-            onClick={() => setSelectedProperty(null)}
-          >
-            <div 
-              className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold">{selectedProperty.address}</h2>
-                <button 
-                  onClick={() => setSelectedProperty(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-gray-600 mb-4">{selectedProperty.description}</p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <span className="text-gray-500">Price:</span>
-                  <span className="ml-2 font-semibold">
-                    ${selectedProperty.price?.toLocaleString() || 'Contact for price'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Bedrooms:</span>
-                  <span className="ml-2 font-semibold">{selectedProperty.bedrooms || 'N/A'}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Bathrooms:</span>
-                  <span className="ml-2 font-semibold">{selectedProperty.bathrooms || 'N/A'}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Size:</span>
-                  <span className="ml-2 font-semibold">
-                    {selectedProperty.area_sqft?.toLocaleString() || 'N/A'} sq ft
-                  </span>
-                </div>
-              </div>
-              <button className="btn-primary w-full">
-                Schedule a Viewing
-              </button>
-            </div>
-          </div>
-        )}
+        <PropertyDetailModal 
+          property={selectedProperty} 
+          onClose={() => setSelectedProperty(null)} 
+        />
       </main>
 
       {/* Footer */}

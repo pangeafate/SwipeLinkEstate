@@ -1,4 +1,10 @@
+/**
+ * @deprecated SwipeService is deprecated and will be removed in a future version.
+ * PropertyCarousel uses AnalyticsService directly for tracking interactions.
+ */
+
 import { supabase } from '@/lib/supabase/client'
+import { AnalyticsService } from '@/lib/analytics/analytics.service'
 import type { 
   SwipeSession, 
   SwipeDirection, 
@@ -36,14 +42,17 @@ export class SwipeService {
       }
     }
 
-    // Track session in database
-    await supabase
-      .from('sessions')
-      .insert({
-        id: sessionId,
-        link_id: linkCode,
-        device_info: session.deviceInfo || null
+    // Track session using AnalyticsService (non-blocking)
+    try {
+      await AnalyticsService.createSession({
+        sessionId,
+        linkId: linkCode,
+        deviceInfo: session.deviceInfo
       })
+    } catch (error) {
+      // Don't fail the entire session initialization if analytics fails
+      console.warn('Failed to create analytics session:', error)
+    }
 
     // Initialize empty state in localStorage
     const initialState: SwipeState = {
@@ -112,14 +121,39 @@ export class SwipeService {
       localStorage.setItem(this.getStorageKey(sessionId), JSON.stringify(newState))
     }
 
-    // Track activity in database
-    await supabase
-      .from('activities')
-      .insert({
-        session_id: sessionId,
-        property_id: propertyId,
-        action: this.getActionFromDirection(direction)
+    // Track activity using AnalyticsService
+    const action = this.getActionFromDirection(direction)
+    
+    // Get link ID from session for tracking
+    const { data: session } = await supabase
+      .from('sessions')
+      .select('link_id')
+      .eq('id', sessionId)
+      .single()
+    
+    if (action === 'like' || action === 'dislike') {
+      await AnalyticsService.trackSwipe({
+        linkId: session?.link_id || '',
+        propertyId,
+        action: action as 'like' | 'dislike',
+        sessionId,
+        metadata: {
+          swipeDirection: direction,
+          timestamp: new Date().toISOString()
+        }
       })
+    } else {
+      await AnalyticsService.trackActivity({
+        linkId: session?.link_id || undefined,
+        propertyId,
+        action,
+        sessionId,
+        metadata: {
+          swipeDirection: direction,
+          timestamp: new Date().toISOString()
+        }
+      })
+    }
 
     return {
       success: true,
@@ -175,6 +209,32 @@ export class SwipeService {
       case 'down': return 'consider'
       case 'up': return 'detail'
       default: return 'view'
+    }
+  }
+
+  /**
+   * Track when a property is viewed (card becomes visible)
+   */
+  static async trackPropertyView(propertyId: string, sessionId: string): Promise<void> {
+    try {
+      // Get link ID from session
+      const { data: session } = await supabase
+        .from('sessions')
+        .select('link_id')
+        .eq('id', sessionId)
+        .single()
+
+      await AnalyticsService.trackView({
+        linkId: session?.link_id || undefined,
+        propertyId,
+        sessionId,
+        metadata: {
+          viewType: 'card_display',
+          timestamp: new Date().toISOString()
+        }
+      })
+    } catch (error) {
+      console.error('Failed to track property view:', error)
     }
   }
 }

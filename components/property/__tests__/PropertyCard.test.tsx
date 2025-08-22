@@ -261,4 +261,20 @@ describe('PropertyCard', () => {
     const image = screen.getByRole('img')
     expect(image).toHaveAttribute('src', expect.stringContaining('/images/properties/sample-1.jpg'))
   })
+
+  it('falls back to placeholder API when image fails to load', () => {
+    const brokenImageProperty = {
+      ...mockProperty,
+      cover_image: 'https://example.com/broken.jpg',
+      images: []
+    }
+
+    render(<PropertyCard property={brokenImageProperty} />)
+
+    const image = screen.getByRole('img')
+    // Simulate image load error
+    fireEvent.error(image)
+
+    expect(image).toHaveAttribute('src', expect.stringContaining('/api/placeholder/400/300'))
+  })
 })

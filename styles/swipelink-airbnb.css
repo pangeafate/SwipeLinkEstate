@@ -1,0 +1,205 @@
+/* SwipeLink Airbnb-Style Component Styles */
+
+/* Hide scrollbar for carousel */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out;
+}
+
+/* Carousel Container */
+.swipelink-carousel {
+  padding-bottom: 80px; /* Space for bucket navigation */
+}
+
+/* Property Card Enhancements */
+.airbnb-card {
+  transition: transform 0.2s ease;
+}
+
+.airbnb-card:hover {
+  transform: translateY(-2px);
+}
+
+.airbnb-card:active {
+  transform: scale(0.98);
+}
+
+/* Modal Overlay */
+.property-modal-overlay {
+  backdrop-filter: blur(4px);
+}
+
+/* Bucket Navigation Shadow */
+.bucket-navigation {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Action Button Animations */
+.action-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.action-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.action-button:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+  .swipelink-carousel {
+    padding-bottom: 70px;
+  }
+  
+  .property-modal-content {
+    border-radius: 0;
+    margin: 0;
+    max-height: 100vh;
+    height: 100vh;
+  }
+  
+  .bucket-navigation {
+    padding: 8px 0;
+  }
+  
+  .bucket-navigation button {
+    padding: 4px 8px;
+  }
+  
+  .bucket-navigation button span:first-child {
+    font-size: 1.5rem;
+  }
+}
+
+/* Tablet Optimizations */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .property-card-wrapper {
+    flex: 0 0 calc(50% - 12px);
+  }
+}
+
+/* Desktop Optimizations */
+@media (min-width: 1024px) {
+  .property-card-wrapper {
+    flex: 0 0 calc(25% - 18px);
+  }
+  
+  .swipelink-carousel {
+    padding-bottom: 90px;
+  }
+}
+
+/* Smooth Scroll Snap for Mobile */
+@media (max-width: 640px) {
+  .carousel-scroll-container {
+    scroll-snap-type: x mandatory;
+  }
+  
+  .property-card-wrapper {
+    scroll-snap-align: center;
+  }
+}
+
+/* Focus States for Accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #FF385C;
+  outline-offset: 2px;
+}
+
+/* Loading State */
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #e0e0e0 50%,
+    #f0f0f0 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Heart Animation */
+.heart-pulse {
+  animation: pulse 0.3s ease;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

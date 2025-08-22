@@ -2,7 +2,7 @@
 
 ## Project Overview for AI Agent
 
-Build a prototype real estate platform with Tinder-like property browsing. The platform allows agents to create shareable links containing property collections that clients can browse using swipe gestures without authentication.
+Build a prototype real estate platform with Airbnb-style carousel property browsing. The platform allows agents to create shareable links containing property collections that clients can browse using an intuitive horizontal carousel interface with button-based categorization and visit booking capabilities, all without authentication.
 
 ## Technology Stack
 
@@ -18,7 +18,7 @@ Frontend: Next.js 14 (App Router)
   - React 18
   - TypeScript
   - Tailwind CSS
-  - react-tinder-card (for swipe)
+  - embla-carousel-react (for Airbnb-style carousel)
   - Framer Motion (for animations)
   - Zustand (state management)
   - React Query (data fetching)
@@ -49,10 +49,13 @@ real-estate-platform/
 │   │   ├── LinkCreator.tsx
 │   │   └── EngagementMetrics.tsx
 │   ├── client/
-│   │   ├── SwipeInterface.tsx
-│   │   ├── PropertySwipeCard.tsx
-│   │   ├── BucketBar.tsx
-│   │   └── FilterBar.tsx
+│   │   ├── ClientLinkInterface.tsx
+│   │   ├── PropertyCarousel.tsx
+│   │   ├── PropertyCard.tsx
+│   │   ├── PropertyModal.tsx
+│   │   ├── BucketManager.tsx
+│   │   ├── VisitBooking.tsx
+│   │   └── CollectionOverview.tsx
 │   └── shared/
 │       ├── ImageGallery.tsx
 │       └── LoadingStates.tsx
@@ -67,7 +70,9 @@ real-estate-platform/
 ├── stores/
 │   ├── agentStore.ts
 │   ├── linkStore.ts
-│   └── swipeStore.ts
+│   ├── carouselStore.ts
+│   ├── bucketStore.ts
+│   └── bookingStore.ts
 └── styles/
     └── globals.css
 ```
@@ -104,7 +109,7 @@ CREATE TABLE activities (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   link_id UUID REFERENCES links(id),
   property_id UUID REFERENCES properties(id),
-  action TEXT CHECK (action IN ('view', 'like', 'dislike', 'consider', 'detail')),
+  action TEXT CHECK (action IN ('view', 'like', 'dislike', 'consider', 'detail', 'book_visit', 'expand', 'assign_bucket')),
   session_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -256,116 +261,138 @@ LinkCard:
     - Edit properties
 ```
 
-## Module 3: Client Interface (Tinder View)
+## Module 3: Client Link Interface (Airbnb-Style Carousel)
 
 ### Functions to Implement
 
 ```yaml
-SwipeService:
+CarouselService:
   - initializeSession(linkCode)
     Input: Link code from URL
     Returns: Session ID, properties array
     Purpose: Start client session
     Side effect: Create session record
   
-  - handleSwipe(direction, propertyId, sessionId)
-    Input: left/right/up/down, property ID, session
+  - handleAction(action, propertyId, sessionId)
+    Input: action type (like/dislike/consider), property ID, session
     Action: Record activity
     Purpose: Track engagement
-    Returns: Next property
+    Returns: Updated bucket state
   
-  - getSwipeState(sessionId)
+  - getBucketState(sessionId)
     Returns: Current buckets state
     Purpose: Show liked/disliked/considering
   
   - resetProperty(propertyId, sessionId)
     Input: Property ID to reset
     Action: Remove from buckets
-    Purpose: Undo swipe action
+    Purpose: Undo action
   
   - getPropertyDetails(propertyId)
     Returns: Full property details
-    Purpose: Show on up-swipe
+    Purpose: Show on expand click
 ```
 
 ### UI Components
 
 ```yaml
-SwipeInterface:
+ClientLinkInterface:
   Layout:
-    - Full screen on mobile
-    - Centered card on desktop
-    - Fixed bottom navigation
+    - Responsive grid system
+    - Collection overview header
+    - Carousel-based property browsing
+    - Modal-based expanded views
   
   Structure:
-    ┌─────────────────────────┐
-    │     [Filter Icon]       │ <- Header (minimal)
-    │                         │
-    │   ┌─────────────┐      │
-    │   │             │      │ <- Property Card Stack
-    │   │   Property  │      │    (Current + 2 preloaded)
-    │   │    Card     │      │
-    │   │             │      │
-    │   └─────────────┘      │
-    │                         │
-    │ [New] [❤️3] [💭2]      │ <- Bucket Bar
-    └─────────────────────────┘
+    ┌────────────────────────────────────┐
+    │  Agent Info | Collection Title  │ <- Header
+    │  12 Properties | $300K-$2M      │
+    ├────────────────────────────────────┤
+    │  [<] [┌───────────┐] [>]       │ <- Carousel
+    │      │  Property  │             │
+    │      │    Card     │             │
+    │      │  [❤️][📝][X]  │             │
+    │      └───────────┘             │
+    │  • • • ● • • • •               │ <- Position
+    ├────────────────────────────────────┤
+    │ Liked(3) | Considering(2) | All │ <- Buckets
+    └────────────────────────────────────┘
 
-PropertySwipeCard:
+PropertyCard (Airbnb-Style):
   Visual Design:
-    - Card shadow: 0 10px 40px rgba(0,0,0,0.15)
-    - Border radius: 16px
+    - Card shadow: 0 4px 6px rgba(0,0,0,0.1)
+    - Border radius: 12px
     - Background: white
-    - Image height: 60% of card
-    - Content padding: 20px
+    - Image aspect ratio: 16:9
+    - Content padding: 16px
   
-  Content Structure:
-    - Hero image (swipeable for gallery)
-    - Dots indicator for multiple images
-    - Price (large, bold)
-    - Address (medium)
+  Compact Card Structure:
+    - Hero image with image counter badge
+    - Price tag (prominent)
+    - Address (truncated)
     - Key stats (beds, baths, sqft)
-    - Swipe hint overlay (first card only)
+    - Action buttons (like, consider, dislike, details)
+    - Clear button labels and hover states
   
-  Animations:
-    - Swipe threshold: 100px
-    - Rotation on swipe: max 30deg
-    - Opacity fade on exit
-    - Spring animation on release
-    - Color overlay for direction hint:
-      - Green (right/like)
-      - Red (left/dislike)
-      - Blue (down/consider)
-      - Purple (up/details)
+  Expanded Modal Structure:
+    - Full-screen overlay
+    - Image gallery with thumbnails
+    - Complete property details
+    - Interactive map
+    - Visit booking interface
+    - Agent notes section
+    - Related properties
+  
+  Interactions:
+    - Click/tap to expand
+    - Smooth carousel navigation
+    - Button hover states
+    - Loading states for images
 
-BucketBar:
+BucketManager:
   Visual:
-    - Fixed bottom position
-    - Glass morphism effect
-    - 3 sections with counts
-    - Tap to view bucket contents
+    - Tab-based navigation bar
+    - Badge counters for each bucket
+    - Color-coded bucket indicators
+    - Smooth transitions between views
+  
+  Bucket Categories:
+    - Liked (heart icon, red)
+    - Considering (bookmark, amber)
+    - Disliked (x icon, gray)
+    - Booked Visits (calendar, green)
   
   Bucket Views:
-    - Grid layout (2 columns mobile)
-    - Mini cards with image + price
-    - Swipe to remove from bucket
-    - Tap to view full details
+    - Grid layout (responsive columns)
+    - Property cards with key info
+    - Drag & drop between buckets
+    - Sort and filter options
+    - Bulk actions support
+    - Download/share bucket summary
 ```
 
-### Swipe Gesture Configuration
+### Carousel & Interaction Configuration
 
 ```yaml
-Gestures:
-  - Velocity threshold: 0.5
-  - Distance threshold: 100px
-  - Rotation factor: 0.2
-  - Animation duration: 300ms
+Carousel Settings:
+  - Navigation: Horizontal scroll, click arrows, keyboard
+  - Snap points: Each property card
+  - Transition duration: 300ms ease-out
+  - Preload: Next 2-3 properties
+  - Loop: Optional end-to-end navigation
+  - Smooth scrolling: Enabled on all devices
   
-Direction Angles:
-  - Right (Like): -45° to 45°
-  - Left (Dislike): 135° to 225°
-  - Down (Consider): 225° to 315°
-  - Up (Details): 45° to 135°
+Interaction Patterns:
+  - Desktop: Click arrows, horizontal scroll, keyboard
+  - Mobile: Horizontal swipe, tap navigation
+  - Tablet: Hybrid touch and precision
+  - Accessibility: Full keyboard support
+  
+Performance:
+  - Lazy loading images
+  - Progressive enhancement
+  - Smooth 60fps animations
+  - Optimistic UI updates
 ```
 
 ## Module 4: Analytics Dashboard
@@ -556,16 +583,17 @@ Mobile First:
 4. Build link sharing UI
 5. Test link creation and copying
 
-### Phase 4: Client Interface (Days 6-8)
+### Phase 4: Client Link Interface (Days 6-8)
 
-1. Implement SwipeService functions
-2. Install and configure react-tinder-card
-3. Build PropertySwipeCard component
-4. Build SwipeInterface container
-5. Implement gesture handling
-6. Build BucketBar component
-7. Add bucket view modals
-8. Test on mobile devices
+1. Implement CarouselService functions
+2. Install and configure embla-carousel-react
+3. Build PropertyCarousel component (Airbnb-style)
+4. Build PropertyCard component with action buttons
+5. Implement PropertyModal for expanded view
+6. Build BucketManager component
+7. Add VisitBooking system
+8. Build CollectionOverview
+9. Test responsive design on all devices
 
 ### Phase 5: Analytics (Days 9-10)
 
@@ -589,18 +617,22 @@ Mobile First:
 ### Critical Success Factors
 
 1. **Mobile-First**: Test everything on mobile first
-2. **Swipe Performance**: Must be smooth, < 16ms per frame
+2. **Carousel Performance**: Must be smooth, < 16ms per frame
 3. **Image Optimization**: Use Next.js Image component, lazy load
 4. **Real-time Updates**: Use Supabase subscriptions for live data
 5. **Error States**: Always handle loading and error states
+6. **Accessibility**: Ensure WCAG 2.1 AA compliance
+7. **Progressive Enhancement**: Core functionality works without JavaScript
 
 ### Common Pitfalls to Avoid
 
 1. Don't fetch all properties at once - paginate
-2. Preload next 2-3 property images while swiping
-3. Use optimistic updates for swipe actions
+2. Preload next 2-3 property images in carousel
+3. Use optimistic updates for bucket assignments
 4. Debounce real-time updates to prevent flicker
 5. Test on slow 3G to ensure good experience
+6. Ensure touch targets are at least 44x44px
+7. Implement proper focus management for modals
 
 ### Demo Data Requirements
 
@@ -612,11 +644,13 @@ Mobile First:
 
 ### Performance Targets
 
-- Initial load: < 2 seconds
-- Swipe response: < 100ms
+- Initial load: < 2 seconds  
+- Carousel navigation: < 100ms
+- Modal open/close: < 250ms
 - Image load: < 1 second
 - Link generation: < 500ms
 - Analytics update: < 2 seconds
+- Bucket assignment: < 50ms feedback
 
 ## Testing Checklist
 
@@ -625,20 +659,24 @@ Mobile First:
 - [ ] Properties display correctly
 - [ ] Link generation works
 - [ ] Link copying works
-- [ ] Swipe in all 4 directions
-- [ ] Buckets update correctly
+- [ ] Carousel navigation smooth
+- [ ] Property expansion works
+- [ ] Bucket assignments persist
+- [ ] Visit booking functional
 - [ ] Analytics track accurately
-- [ ] Images load and display
+- [ ] Images load progressively
 - [ ] Mobile responsive design
 
 ### User Experience Tests
 
-- [ ] Swipe feels smooth
+- [ ] Carousel navigation intuitive
 - [ ] Visual feedback is clear
 - [ ] Loading states present
 - [ ] Error messages helpful
-- [ ] Mobile gestures work
-- [ ] Desktop experience good
+- [ ] Touch gestures work
+- [ ] Keyboard navigation works
+- [ ] Modal transitions smooth
+- [ ] Bucket management easy
 - [ ] Analytics are real-time
 - [ ] Copy feedback works
 
@@ -646,11 +684,14 @@ Mobile First:
 
 The prototype is successful when:
 
-1. Client can swipe through properties smoothly
-2. Engagement is tracked accurately
-3. Agent can see real-time activity
-4. Works perfectly on mobile
-5. Loads in under 2 seconds
-6. Swipe animations are delightful
-7. Zero authentication friction for clients
-8. Clear value proposition in 30 seconds
+1. Client can browse properties via Airbnb-style horizontal carousel
+2. Property details are easily accessible via expand button
+3. Button-based categorization helps decision-making  
+4. Visit booking converts interest to action
+5. Engagement is tracked accurately
+6. Agent receives meaningful insights
+7. Works perfectly on all devices
+8. Loads in under 2 seconds
+9. Accessible to all users
+10. Zero authentication friction for clients
+11. Clear value proposition in 30 seconds

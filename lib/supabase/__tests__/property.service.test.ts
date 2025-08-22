@@ -1,18 +1,20 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { PropertyService } from '../property.service'
-import { supabase } from '../client'
+import { setupTest } from '@/test/utils/testSetup'
+import { fixtures } from '@/test/fixtures'
+import { SupabaseMockFactory } from '@/test/mocks/supabase'
 import type { Property, PropertyInsert } from '../types'
 
-// Mock Supabase client
+// Mock Supabase client using shared factory
 jest.mock('../client', () => ({
-  supabase: {
-    from: jest.fn(),
-  },
+  supabase: SupabaseMockFactory.create()
 }))
 
-const mockSupabase = supabase as jest.Mocked<typeof supabase>
+const { supabase: mockSupabase } = require('../client')
 
 describe('PropertyService', () => {
+  setupTest({ suppressConsoleErrors: true })
+
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -20,23 +22,13 @@ describe('PropertyService', () => {
   describe('getAllProperties', () => {
     it('should return all active properties', async () => {
       // ARRANGE
-      const mockProperties: Property[] = [
-        {
-          id: '1',
-          address: '123 Test St',
-          price: 500000,
-          bedrooms: 3,
-          bathrooms: 2.0,
-          area_sqft: 1500,
-          description: 'Test property',
-          features: ['parking', 'pool'] as any, // Cast to Json type
-          cover_image: null,
-          images: [] as any, // Cast to Json type
-          status: 'active',
-          created_at: '2023-01-01T00:00:00.000Z',
-          updated_at: '2023-01-01T00:00:00.000Z',
-        },
-      ]
+      const mockProperties: Property[] = fixtures.properties.slice(0, 1).map(p => ({
+        ...p,
+        features: p.features as any, // Cast to Json type
+        images: p.images as any, // Cast to Json type
+        created_at: '2023-01-01T00:00:00.000Z',
+        updated_at: '2023-01-01T00:00:00.000Z',
+      }))
 
       // @ts-expect-error Mock typing issue
       const mockOrder = (jest.fn() as jest.Mock).mockResolvedValue({
@@ -633,21 +625,13 @@ describe('PropertyService', () => {
       // ARRANGE
       const propertyIds: string[] = []
 
-      const mockOrder = (jest.fn() as jest.Mock).mockResolvedValue({
-        data: [],
-        error: null,
-      })
-      const mockIn = jest.fn().mockReturnValue({ order: mockOrder })
-      const mockSelect = jest.fn().mockReturnValue({ in: mockIn })
-      const mockQueryBuilder = { select: mockSelect }
-      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
-
       // ACT
       const result = await PropertyService.getPropertiesByIds(propertyIds)
 
       // ASSERT
       expect(result).toEqual([])
-      expect(mockIn).toHaveBeenCalledWith('id', [])
+      // When array is empty, the method returns early and doesn't call Supabase
+      expect(mockSupabase.from).not.toHaveBeenCalled()
     })
   })
 
@@ -793,6 +777,249 @@ describe('PropertyService', () => {
       // ASSERT
       expect(result).toEqual([])
       expect(mockOr).toHaveBeenCalledWith(`address.ilike.%${query}%,description.ilike.%${query}%`)
+    })
+  })
+
+  describe('deleteProperty', () => {
+    it('should delete property successfully', async () => {
+      // ARRANGE
+      const propertyId = '1'
+      
+      const mockDelete = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: null,
+        error: null,
+      })
+      const mockEq = jest.fn().mockReturnValue({ delete: mockDelete })
+      const mockQueryBuilder = { eq: mockEq }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
+
+      // ACT
+      await PropertyService.deleteProperty(propertyId)
+
+      // ASSERT
+      expect(mockSupabase.from).toHaveBeenCalledWith('properties')
+      expect(mockEq).toHaveBeenCalledWith('id', propertyId)
+    })
+
+    it('should throw error when delete operation fails', async () => {
+      // ARRANGE
+      const propertyId = '1'
+      
+      const mockDelete = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: null,
+        error: { message: 'Delete failed', code: 'DB_ERROR' },
+      })
+      const mockEq = jest.fn().mockReturnValue({ delete: mockDelete })
+      const mockQueryBuilder = { eq: mockEq }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
+
+      // ACT & ASSERT
+      await expect(PropertyService.deleteProperty(propertyId)).rejects.toThrow('Delete failed')
+    })
+  })
+
+  describe('getPropertiesOptimized', () => {
+    it('should get properties with default options', async () => {
+      // ARRANGE
+      const mockProperties: Property[] = fixtures.properties.slice(0, 2)
+      
+      const mockData = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: mockProperties,
+        count: mockProperties.length,
+        error: null,
+      })
+      const mockRange = jest.fn().mockReturnValue({ data: mockData })
+      const mockOrder = jest.fn().mockReturnValue({ range: mockRange })
+      const mockEq = jest.fn().mockReturnValue({ order: mockOrder })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { select: mockSelect }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
+
+      // ACT
+      const result = await PropertyService.getPropertiesOptimized({})
+
+      // ASSERT
+      expect(result).toEqual({
+        properties: mockProperties,
+        total: mockProperties.length,
+        page: 1,
+        totalPages: 1
+      })
+    })
+
+    it('should get properties with custom options', async () => {
+      // ARRANGE
+      const mockProperties: Property[] = fixtures.properties.slice(0, 2)
+      const options = {
+        page: 2,
+        limit: 5,
+        status: 'active' as PropertyStatus,
+        sortBy: 'price' as const,
+        sortOrder: 'desc' as const
+      }
+      
+      const mockData = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: mockProperties,
+        count: 10,
+        error: null,
+      })
+      const mockRange = jest.fn().mockReturnValue({ data: mockData })
+      const mockOrder = jest.fn().mockReturnValue({ range: mockRange })
+      const mockEq = jest.fn().mockReturnValue({ order: mockOrder })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { select: mockSelect }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
+
+      // ACT
+      const result = await PropertyService.getPropertiesOptimized(options)
+
+      // ASSERT
+      expect(result).toEqual({
+        properties: mockProperties,
+        total: 10,
+        page: 2,
+        totalPages: 2
+      })
+      expect(mockEq).toHaveBeenCalledWith('status', 'active')
+      expect(mockOrder).toHaveBeenCalledWith('price', { ascending: false })
+      expect(mockRange).toHaveBeenCalledWith(5, 9) // page 2, limit 5: items 5-9
+    })
+
+    it('should handle error in optimized query', async () => {
+      // ARRANGE
+      const mockData = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: null,
+        count: null,
+        error: { message: 'Query failed' },
+      })
+      const mockRange = jest.fn().mockReturnValue({ data: mockData })
+      const mockOrder = jest.fn().mockReturnValue({ range: mockRange })
+      const mockEq = jest.fn().mockReturnValue({ order: mockOrder })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { select: mockSelect }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
+
+      // ACT & ASSERT
+      await expect(PropertyService.getPropertiesOptimized({})).rejects.toThrow('Query failed')
+    })
+  })
+
+  describe('getPropertiesBatch', () => {
+    it('should get properties by batch of IDs', async () => {
+      // ARRANGE
+      const ids = ['1', '2', '3']
+      const mockProperties: Property[] = fixtures.properties.slice(0, 3)
+      
+      const mockIn = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: mockProperties,
+        error: null,
+      })
+      const mockEq = jest.fn().mockReturnValue({ in: mockIn })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { select: mockSelect }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
+
+      // ACT
+      const result = await PropertyService.getPropertiesBatch(ids)
+
+      // ASSERT
+      expect(result).toEqual(mockProperties)
+      expect(mockEq).toHaveBeenCalledWith('status', 'active')
+      expect(mockIn).toHaveBeenCalledWith('id', ids)
+    })
+
+    it('should handle empty array of IDs in batch', async () => {
+      // ARRANGE
+      const ids: string[] = []
+
+      // ACT
+      const result = await PropertyService.getPropertiesBatch(ids)
+
+      // ASSERT
+      expect(result).toEqual([])
+      expect(mockSupabase.from).not.toHaveBeenCalled()
+    })
+
+    it('should handle error in batch query', async () => {
+      // ARRANGE
+      const ids = ['1', '2', '3']
+      
+      const mockIn = (jest.fn() as jest.Mock).mockResolvedValue({
+        data: null,
+        error: { message: 'Batch query failed' },
+      })
+      const mockEq = jest.fn().mockReturnValue({ in: mockIn })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      const mockQueryBuilder = { select: mockSelect }
+      mockSupabase.from.mockReturnValue(mockQueryBuilder as any)
+
+      // ACT & ASSERT
+      await expect(PropertyService.getPropertiesBatch(ids)).rejects.toThrow('Batch query failed')
+    })
+  })
+
+  describe('getPropertyStats', () => {
+    it('should get property statistics successfully', async () => {
+      // ARRANGE
+      const mockStats = {
+        total_properties: 100,
+        active_properties: 85,
+        avg_price: 450000,
+        min_price: 200000,
+        max_price: 1200000,
+        property_types: {
+          house: 60,
+          apartment: 25,
+          condo: 15
+        }
+      }
+      
+      // Mock the RPC call
+      mockSupabase.rpc = jest.fn().mockResolvedValue({
+        data: mockStats,
+        error: null
+      })
+
+      // ACT
+      const result = await PropertyService.getPropertyStats()
+
+      // ASSERT
+      expect(result).toEqual({
+        total: 100,
+        active: 85,
+        avgPrice: 450000,
+        minPrice: 200000,
+        maxPrice: 1200000,
+        avgBedrooms: 3,
+        propertyTypes: {
+          house: 60,
+          apartment: 25,
+          condo: 15
+        }
+      })
+      expect(mockSupabase.rpc).toHaveBeenCalledWith('get_property_stats')
+    })
+
+    it('should handle error in stats query', async () => {
+      // ARRANGE
+      mockSupabase.rpc = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'Stats query failed' }
+      })
+
+      // ACT & ASSERT
+      await expect(PropertyService.getPropertyStats()).rejects.toThrow('Stats query failed')
+    })
+
+    it('should handle null/undefined stats data', async () => {
+      // ARRANGE
+      mockSupabase.rpc = jest.fn().mockResolvedValue({
+        data: null,
+        error: null
+      })
+
+      // ACT & ASSERT
+      await expect(PropertyService.getPropertyStats()).rejects.toThrow('No statistics data available')
     })
   })
 })

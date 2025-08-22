@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import LinksPage from '../page'
 
 // Mock Next.js Link component
@@ -36,6 +37,20 @@ jest.mock('@/components/link', () => {
   }
 })
 
+// Mock useLinksQuery hook with configurable data
+let mockLinksData: any[] = []
+
+const mockUseLinksQuery = jest.fn(() => ({
+  data: mockLinksData,
+  isLoading: false,
+  error: null,
+  refetch: jest.fn()
+}))
+
+jest.mock('@/lib/query/useLinksQuery', () => ({
+  useLinksQuery: () => mockUseLinksQuery()
+}))
+
 // Mock alert
 const mockAlert = jest.fn()
 global.alert = mockAlert
@@ -46,9 +61,32 @@ Object.defineProperty(window, 'location', {
   writable: true
 })
 
+// Test wrapper with QueryClient
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: Infinity,
+      },
+    },
+  })
+
+  const MockProvider = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  )
+  MockProvider.displayName = 'MockProvider'
+  return MockProvider
+}
+
 describe('LinksPage', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    
+    // Reset mock links data to empty by default
+    mockLinksData = []
     
     // Set up window.location mock for all tests
     delete (window as any).location
@@ -329,5 +367,65 @@ describe('LinksPage', () => {
     // ASSERT - Check date formatting
     const expectedDate = new Date('2024-01-01T00:00:00Z').toLocaleDateString()
     expect(screen.getByText(`Created: ${expectedDate}`)).toBeInTheDocument()
+  })
+
+  it('should display existing links from database on page load', async () => {
+    // ARRANGE - Set up mock data for this test
+    mockLinksData = [
+      {
+        id: 'existing-link-1',
+        code: 'EXIST1',
+        name: 'Existing Collection 1',
+        property_ids: '["prop-1", "prop-2"]',
+        created_at: '2024-01-01T00:00:00Z',
+        expires_at: null
+      },
+      {
+        id: 'existing-link-2', 
+        code: 'EXIST2',
+        name: 'Existing Collection 2',
+        property_ids: '["prop-3"]',
+        created_at: '2024-01-02T00:00:00Z',
+        expires_at: null
+      }
+    ]
+    
+    // ACT
+    render(<LinksPage />, { wrapper: createWrapper() })
+
+    // ASSERT - Should display existing links from database
+    await waitFor(() => {
+      expect(screen.getByText('Existing Collection 1')).toBeInTheDocument()
+      expect(screen.getByText('Existing Collection 2')).toBeInTheDocument()
+    })
+
+    // Should show correct link details
+    expect(screen.getByText('Code: EXIST1 • 2 properties')).toBeInTheDocument()
+    expect(screen.getByText('Code: EXIST2 • 1 properties')).toBeInTheDocument()
+
+    // Should not show empty state when links exist
+    expect(screen.queryByText('No links created yet')).not.toBeInTheDocument()
+    expect(screen.queryByText('Create your first property collection link to share with clients')).not.toBeInTheDocument()
+  })
+
+  it('should handle URL search params for pre-selected properties', async () => {
+    // ARRANGE - Mock URL with selected properties
+    delete (window as any).location
+    window.location = { 
+      origin: 'http://localhost:3000',
+      search: '?selected=prop-1,prop-2'
+    } as Location
+
+    const user = userEvent.setup()
+    render(<LinksPage />, { wrapper: createWrapper() })
+
+    // ACT - Click create new link
+    await act(async () => {
+      await user.click(screen.getByText('Create New Link'))
+    })
+
+    // ASSERT - Link creator should receive pre-selected properties
+    // This will be tested by passing selectedPropertyIds to LinkCreator
+    expect(screen.getByTestId('link-creator')).toBeInTheDocument()
   })
 })

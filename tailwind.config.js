@@ -20,6 +20,13 @@ module.exports = {
           800: '#1e40af',
           900: '#1e3a8a',
         },
+        // CRM-specific colors from specification
+        blue: {
+          25: 'rgba(18, 119, 225, 0.05)', // --crm-bg-hover
+          50: 'rgba(18, 119, 225, 0.1)',  // Active background
+          600: '#1277E1', // --crm-primary
+          700: '#0B62C7', // Hover state
+        },
         success: {
           50: '#ecfdf5',
           100: '#d1fae5',
@@ -50,6 +57,13 @@ module.exports = {
         info: {
           500: '#8b5cf6',
         }
+      },
+      spacing: {
+        '15': '60px',  // Collapsed sidebar width
+        '60': '240px', // Expanded sidebar width
+      },
+      borderWidth: {
+        '3': '3px', // Left border for active items
       },
       boxShadow: {
         'card': '0 10px 40px rgba(0,0,0,0.15)',

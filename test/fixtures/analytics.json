@@ -1,0 +1,333 @@
+{
+  "dashboardAnalytics": {
+    "properties": {
+      "total": 25,
+      "active": 22
+    },
+    "links": {
+      "total": 12,
+      "active": 8
+    },
+    "sessions": {
+      "total": 347,
+      "avgDuration": 285
+    },
+    "views": {
+      "total": 1456
+    },
+    "recentActivity": [
+      {
+        "id": "activity-1",
+        "type": "property_view",
+        "propertyId": "prop-3",
+        "linkId": "link-1",
+        "sessionId": "session-abc123",
+        "timestamp": "2023-10-25T14:30:00.000Z",
+        "metadata": {
+          "duration": 45,
+          "deviceType": "mobile"
+        }
+      },
+      {
+        "id": "activity-2",
+        "type": "property_like",
+        "propertyId": "prop-5",
+        "linkId": "link-1",
+        "sessionId": "session-abc123",
+        "timestamp": "2023-10-25T14:31:30.000Z",
+        "metadata": {
+          "deviceType": "mobile"
+        }
+      },
+      {
+        "id": "activity-3",
+        "type": "link_view",
+        "linkId": "link-2",
+        "sessionId": "session-def456",
+        "timestamp": "2023-10-25T15:15:00.000Z",
+        "metadata": {
+          "deviceType": "desktop",
+          "referrer": "google.com"
+        }
+      },
+      {
+        "id": "activity-4",
+        "type": "property_view",
+        "propertyId": "prop-1",
+        "linkId": "link-2",
+        "sessionId": "session-def456",
+        "timestamp": "2023-10-25T15:16:00.000Z",
+        "metadata": {
+          "duration": 62,
+          "deviceType": "desktop"
+        }
+      },
+      {
+        "id": "activity-5",
+        "type": "session_start",
+        "linkId": "link-3",
+        "sessionId": "session-ghi789",
+        "timestamp": "2023-10-25T16:00:00.000Z",
+        "metadata": {
+          "deviceType": "tablet",
+          "userAgent": "Mozilla/5.0 (iPad; CPU OS 16_0 like Mac OS X)"
+        }
+      }
+    ]
+  },
+  "linkAnalytics": {
+    "abc123def": {
+      "linkCode": "abc123def",
+      "totalViews": 87,
+      "uniqueViews": 62,
+      "sessions": 45,
+      "avgSessionDuration": 342,
+      "viewsByDay": [
+        { "date": "2023-10-19", "views": 8 },
+        { "date": "2023-10-20", "views": 12 },
+        { "date": "2023-10-21", "views": 15 },
+        { "date": "2023-10-22", "views": 9 },
+        { "date": "2023-10-23", "views": 18 },
+        { "date": "2023-10-24", "views": 14 },
+        { "date": "2023-10-25", "views": 11 }
+      ],
+      "deviceTypes": {
+        "mobile": 52,
+        "desktop": 28,
+        "tablet": 7
+      },
+      "locations": {
+        "US": 65,
+        "CA": 15,
+        "UK": 4,
+        "AU": 3
+      }
+    },
+    "xyz789ghi": {
+      "linkCode": "xyz789ghi",
+      "totalViews": 134,
+      "uniqueViews": 98,
+      "sessions": 72,
+      "avgSessionDuration": 298,
+      "viewsByDay": [
+        { "date": "2023-10-19", "views": 16 },
+        { "date": "2023-10-20", "views": 22 },
+        { "date": "2023-10-21", "views": 19 },
+        { "date": "2023-10-22", "views": 24 },
+        { "date": "2023-10-23", "views": 18 },
+        { "date": "2023-10-24", "views": 21 },
+        { "date": "2023-10-25", "views": 14 }
+      ],
+      "deviceTypes": {
+        "mobile": 67,
+        "desktop": 54,
+        "tablet": 13
+      },
+      "locations": {
+        "US": 89,
+        "CA": 28,
+        "UK": 12,
+        "AU": 3,
+        "DE": 2
+      }
+    }
+  },
+  "propertyAnalytics": {
+    "prop-1": {
+      "propertyId": "prop-1",
+      "totalViews": 156,
+      "uniqueViews": 124,
+      "likes": 38,
+      "dislikes": 7,
+      "viewsByDay": [
+        { "date": "2023-10-19", "views": 18 },
+        { "date": "2023-10-20", "views": 25 },
+        { "date": "2023-10-21", "views": 22 },
+        { "date": "2023-10-22", "views": 19 },
+        { "date": "2023-10-23", "views": 28 },
+        { "date": "2023-10-24", "views": 23 },
+        { "date": "2023-10-25", "views": 21 }
+      ],
+      "avgTimeViewed": 67,
+      "conversionRate": 0.244
+    },
+    "prop-3": {
+      "propertyId": "prop-3",
+      "totalViews": 203,
+      "uniqueViews": 167,
+      "likes": 67,
+      "dislikes": 12,
+      "viewsByDay": [
+        { "date": "2023-10-19", "views": 24 },
+        { "date": "2023-10-20", "views": 32 },
+        { "date": "2023-10-21", "views": 29 },
+        { "date": "2023-10-22", "views": 35 },
+        { "date": "2023-10-23", "views": 28 },
+        { "date": "2023-10-24", "views": 31 },
+        { "date": "2023-10-25", "views": 24 }
+      ],
+      "avgTimeViewed": 89,
+      "conversionRate": 0.330
+    },
+    "prop-5": {
+      "propertyId": "prop-5",
+      "totalViews": 298,
+      "uniqueViews": 234,
+      "likes": 89,
+      "dislikes": 18,
+      "viewsByDay": [
+        { "date": "2023-10-19", "views": 35 },
+        { "date": "2023-10-20", "views": 45 },
+        { "date": "2023-10-21", "views": 42 },
+        { "date": "2023-10-22", "views": 48 },
+        { "date": "2023-10-23", "views": 38 },
+        { "date": "2023-10-24", "views": 46 },
+        { "date": "2023-10-25", "views": 44 }
+      ],
+      "avgTimeViewed": 125,
+      "conversionRate": 0.299
+    }
+  },
+  "sessionData": [
+    {
+      "id": "session-abc123",
+      "linkId": "link-1",
+      "startTime": "2023-10-25T14:25:00.000Z",
+      "endTime": "2023-10-25T14:35:30.000Z",
+      "duration": 630,
+      "viewedProperties": ["prop-3", "prop-5"],
+      "likedProperties": ["prop-5"],
+      "dislikedProperties": [],
+      "deviceType": "mobile",
+      "browser": "Chrome",
+      "location": "US"
+    },
+    {
+      "id": "session-def456",
+      "linkId": "link-2",
+      "startTime": "2023-10-25T15:10:00.000Z",
+      "endTime": "2023-10-25T15:25:45.000Z",
+      "duration": 945,
+      "viewedProperties": ["prop-1", "prop-2", "prop-4"],
+      "likedProperties": ["prop-1", "prop-2"],
+      "dislikedProperties": ["prop-4"],
+      "deviceType": "desktop",
+      "browser": "Firefox",
+      "location": "CA"
+    },
+    {
+      "id": "session-ghi789",
+      "linkId": "link-3",
+      "startTime": "2023-10-25T16:00:00.000Z",
+      "endTime": "2023-10-25T16:12:30.000Z",
+      "duration": 750,
+      "viewedProperties": ["prop-1", "prop-6"],
+      "likedProperties": ["prop-6"],
+      "dislikedProperties": [],
+      "deviceType": "tablet",
+      "browser": "Safari",
+      "location": "UK"
+    }
+  ],
+  "aggregatedMetrics": {
+    "totalViews": 1456,
+    "totalSessions": 347,
+    "avgSessionDuration": 285,
+    "totalProperties": 25,
+    "activeProperties": 22,
+    "totalLinks": 12,
+    "activeLinks": 8,
+    "conversionRate": 0.289,
+    "topViewedProperties": [
+      { "id": "prop-5", "views": 298 },
+      { "id": "prop-3", "views": 203 },
+      { "id": "prop-1", "views": 156 },
+      { "id": "prop-8", "views": 142 },
+      { "id": "prop-9", "views": 128 }
+    ],
+    "topPerformingLinks": [
+      { "code": "xyz789ghi", "views": 134, "sessions": 72 },
+      { "code": "abc123def", "views": 87, "sessions": 45 },
+      { "code": "jkl456mno", "views": 76, "sessions": 38 },
+      { "code": "pqr123stu", "views": 65, "sessions": 32 }
+    ],
+    "deviceBreakdown": {
+      "mobile": 0.58,
+      "desktop": 0.32,
+      "tablet": 0.10
+    },
+    "locationBreakdown": {
+      "US": 0.72,
+      "CA": 0.18,
+      "UK": 0.06,
+      "AU": 0.03,
+      "Other": 0.01
+    },
+    "activityTrends": {
+      "daily": [
+        { "date": "2023-10-19", "views": 101, "sessions": 45 },
+        { "date": "2023-10-20", "views": 136, "sessions": 62 },
+        { "date": "2023-10-21", "views": 127, "sessions": 58 },
+        { "date": "2023-10-22", "views": 145, "sessions": 67 },
+        { "date": "2023-10-23", "views": 132, "sessions": 59 },
+        { "date": "2023-10-24", "views": 141, "sessions": 65 },
+        { "date": "2023-10-25", "views": 118, "sessions": 53 }
+      ],
+      "hourly": {
+        "peak": "15:00-16:00",
+        "average": 12.5,
+        "distribution": [
+          { "hour": "09:00", "views": 45 },
+          { "hour": "10:00", "views": 68 },
+          { "hour": "11:00", "views": 82 },
+          { "hour": "12:00", "views": 76 },
+          { "hour": "13:00", "views": 89 },
+          { "hour": "14:00", "views": 95 },
+          { "hour": "15:00", "views": 103 },
+          { "hour": "16:00", "views": 97 },
+          { "hour": "17:00", "views": 84 },
+          { "hour": "18:00", "views": 71 }
+        ]
+      }
+    }
+  },
+  "chartData": {
+    "basic": [
+      { "label": "Views", "value": 100, "color": "bg-blue-500" },
+      { "label": "Likes", "value": 75, "color": "bg-green-500" },
+      { "label": "Dislikes", "value": 25, "color": "bg-red-500" }
+    ],
+    "empty": [],
+    "single": [
+      { "label": "Single Value", "value": 42 }
+    ],
+    "large": [
+      { "label": "Large Value", "value": 1000000 }
+    ],
+    "mixed": [
+      { "label": "Zero", "value": 0 },
+      { "label": "Positive", "value": 50 },
+      { "label": "Negative", "value": -10 }
+    ],
+    "percentages": [
+      { "label": "A", "value": 30 },
+      { "label": "B", "value": 70 }
+    ],
+    "longLabels": [
+      { "label": "Very Long Label That Should Be Truncated in Charts", "value": 100 }
+    ],
+    "timeSeries": [
+      { "label": "Jan", "value": 120 },
+      { "label": "Feb", "value": 150 },
+      { "label": "Mar", "value": 180 },
+      { "label": "Apr", "value": 140 },
+      { "label": "May", "value": 200 }
+    ],
+    "quarterly": [
+      { "label": "Q1", "value": 150 },
+      { "label": "Q2", "value": 200 },
+      { "label": "Q3", "value": 175 },
+      { "label": "Q4", "value": 225 }
+    ]
+  }
+}

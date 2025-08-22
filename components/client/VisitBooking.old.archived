@@ -1,0 +1,846 @@
+import React, { useState, useCallback, useEffect, useRef } from 'react'
+import { Property } from './types'
+
+interface Agent {
+  id: string
+  name: string
+  phone: string
+  email: string
+  avatar?: string
+}
+
+interface TimeSlot {
+  date: string
+  time: string
+  available: boolean
+}
+
+interface VisitorInfo {
+  name: string
+  email: string
+  phone: string
+  groupSize: number
+}
+
+interface VisitPreferences {
+  specialRequirements: string
+  accessibilityNeeds: boolean
+  budgetDiscussion: boolean
+  financingDiscussion: boolean
+}
+
+interface AdditionalRequests {
+  neighborhoodTour: boolean
+  comparableProperties: boolean
+  marketAnalysis: boolean
+  customNotes: string
+}
+
+interface BookingSubmission {
+  propertyId: string
+  date: string
+  time: string
+  visitor: VisitorInfo
+  preferences: VisitPreferences
+  additionalRequests: AdditionalRequests
+}
+
+interface ConfirmedBooking {
+  confirmationNumber: string
+  date: string
+  time: string
+  property: Property
+  agent: Agent
+}
+
+interface ExistingBooking {
+  id: string
+  confirmationNumber?: string
+  date: string
+  time: string
+  property?: Property
+}
+
+interface VisitBookingProps {
+  property: Property
+  agent?: Agent
+  availableSlots: TimeSlot[]
+  likedProperties?: Property[]
+  enableMultiPropertyBooking?: boolean
+  isOpen: boolean
+  showConfirmation?: boolean
+  confirmedBooking?: ConfirmedBooking
+  existingBooking?: ExistingBooking
+  isReschedule?: boolean
+  loading?: boolean
+  error?: string
+  onSubmit: (booking: BookingSubmission) => void
+  onCancel: () => void
+  onReschedule?: (bookingId: string, newSlot: { date: string; time: string }) => void
+}
+
+const VisitBooking: React.FC<VisitBookingProps> = ({
+  property,
+  agent,
+  availableSlots,
+  likedProperties = [],
+  enableMultiPropertyBooking = false,
+  isOpen,
+  showConfirmation = false,
+  confirmedBooking,
+  existingBooking,
+  isReschedule = false,
+  loading = false,
+  error,
+  onSubmit,
+  onCancel,
+  onReschedule
+}) => {
+  // State management
+  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [selectedTime, setSelectedTime] = useState<string>('')
+  const [visitorInfo, setVisitorInfo] = useState<VisitorInfo>({
+    name: '',
+    email: '',
+    phone: '',
+    groupSize: 1
+  })
+  const [preferences, setPreferences] = useState<VisitPreferences>({
+    specialRequirements: '',
+    accessibilityNeeds: false,
+    budgetDiscussion: false,
+    financingDiscussion: false
+  })
+  const [additionalRequests, setAdditionalRequests] = useState<AdditionalRequests>({
+    neighborhoodTour: false,
+    comparableProperties: false,
+    marketAnalysis: false,
+    customNotes: ''
+  })
+  const [multiPropertyMode, setMultiPropertyMode] = useState(false)
+  const [selectedAdditionalProperties, setSelectedAdditionalProperties] = useState<string[]>([])
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+
+  // Refs
+  const modalRef = useRef<HTMLDivElement>(null)
+  const firstFocusableRef = useRef<HTMLButtonElement>(null)
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen && !isReschedule) {
+      resetForm()
+    }
+  }, [isOpen, isReschedule])
+
+  // Focus management
+  useEffect(() => {
+    if (isOpen) {
+      firstFocusableRef.current?.focus()
+    }
+  }, [isOpen])
+
+  // Keyboard event handling
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onCancel()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onCancel])
+
+  const resetForm = useCallback(() => {
+    setSelectedDate('')
+    setSelectedTime('')
+    setVisitorInfo({ name: '', email: '', phone: '', groupSize: 1 })
+    setPreferences({
+      specialRequirements: '',
+      accessibilityNeeds: false,
+      budgetDiscussion: false,
+      financingDiscussion: false
+    })
+    setAdditionalRequests({
+      neighborhoodTour: false,
+      comparableProperties: false,
+      marketAnalysis: false,
+      customNotes: ''
+    })
+    setMultiPropertyMode(false)
+    setSelectedAdditionalProperties([])
+    setFormErrors({})
+  }, [])
+
+  // Time slot selection
+  const handleSlotSelection = useCallback((date: string, time: string) => {
+    setSelectedDate(date)
+    setSelectedTime(time)
+    setFormErrors({})
+    
+    // Update live region for screen readers
+    const liveRegion = document.querySelector('[data-testid="booking-live-region"]')
+    if (liveRegion) {
+      const formattedDate = new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+      liveRegion.textContent = `Selected ${formattedDate} at ${time} for property visit`
+    }
+  }, [])
+
+  // Phone number formatting
+  const formatPhoneNumber = (value: string) => {
+    const phoneNumber = value.replace(/\D/g, '')
+    if (phoneNumber.length === 10) {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6)}`
+    }
+    return value
+  }
+
+  // Form validation
+  const validateForm = useCallback((): boolean => {
+    const errors: Record<string, string> = {}
+
+    if (!visitorInfo.name.trim()) {
+      errors.name = 'Name is required'
+    }
+
+    if (!visitorInfo.email.trim()) {
+      errors.email = 'Email is required'
+    } else if (!/\S+@\S+\.\S+/.test(visitorInfo.email)) {
+      errors.email = 'Invalid email format'
+    }
+
+    if (!visitorInfo.phone.trim()) {
+      errors.phone = 'Phone is required'
+    } else if (!/^\(\d{3}\) \d{3}-\d{4}$/.test(visitorInfo.phone)) {
+      errors.phone = 'Invalid phone number'
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }, [visitorInfo])
+
+  // Form submission
+  const handleSubmit = useCallback(() => {
+    if (isReschedule && existingBooking && onReschedule) {
+      // For reschedule, we only need date and time
+      onReschedule(existingBooking.id, {
+        date: selectedDate,
+        time: selectedTime
+      })
+    } else {
+      // For new bookings, validate the full form
+      if (!validateForm()) return
+      
+      const booking: BookingSubmission = {
+        propertyId: property.id,
+        date: selectedDate,
+        time: selectedTime,
+        visitor: visitorInfo,
+        preferences,
+        additionalRequests
+      }
+      onSubmit(booking)
+    }
+  }, [validateForm, isReschedule, existingBooking, onReschedule, selectedDate, selectedTime, property.id, visitorInfo, preferences, additionalRequests, onSubmit])
+
+  // Handle input changes
+  const handleInputChange = useCallback((field: string, value: string | boolean | number, section: 'visitor' | 'preferences' | 'requests' = 'visitor') => {
+    if (section === 'visitor') {
+      setVisitorInfo(prev => ({
+        ...prev,
+        [field]: field === 'phone' ? formatPhoneNumber(value as string) : value
+      }))
+    } else if (section === 'preferences') {
+      setPreferences(prev => ({ ...prev, [field]: value }))
+    } else if (section === 'requests') {
+      setAdditionalRequests(prev => ({ ...prev, [field]: value }))
+    }
+
+    // Clear field error on change
+    if (formErrors[field]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }, [formErrors])
+
+  // Calendar integration
+  const handleAddToCalendar = useCallback(() => {
+    if (!confirmedBooking) return
+
+    const startDate = new Date(`${confirmedBooking.date} ${confirmedBooking.time}`)
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000) // 1 hour duration
+    
+    const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Property Visit - ${encodeURIComponent(confirmedBooking.property.address)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(`Visit to ${confirmedBooking.property.address} with ${confirmedBooking.agent.name}`)}&location=${encodeURIComponent(confirmedBooking.property.address)}`
+    
+    window.open(calendarUrl, '_blank')
+  }, [confirmedBooking])
+
+  // Get time slot ID for testing
+  const getSlotTestId = (date: string, time: string) => {
+    const timeFormatted = time.replace(/[:\s]/g, '').toLowerCase()
+    if (time.includes('10:00')) return `time-slot-${date}-10:00`
+    if (time.includes('2:00 PM')) return `time-slot-${date}-14:00`
+    if (time.includes('11:00')) return `time-slot-${date}-11:00`
+    if (time.includes('3:00 PM')) return `time-slot-${date}-15:00`
+    return `time-slot-${date}-${timeFormatted.replace('am', '').replace('pm', '')}`
+  }
+
+  // Check if date is in the past
+  const isPastDate = (date: string) => {
+    return new Date(date) < new Date(new Date().toDateString())
+  }
+
+  // Check if slot is current booking
+  const isCurrentBooking = (date: string, time: string) => {
+    return existingBooking?.date === date && existingBooking?.time === time
+  }
+
+  if (!isOpen) {
+    return null
+  }
+
+  // Show confirmation screen
+  if (showConfirmation && confirmedBooking) {
+    return (
+      <div 
+        data-testid="modal-backdrop"
+        className="booking-modal-backdrop"
+        role="dialog"
+        aria-labelledby="confirmation-title"
+      >
+      <div 
+        data-testid="visit-booking-modal"
+        className="booking-modal"
+      >
+        <div className="booking-modal">
+          <div data-testid="booking-confirmation" className="confirmation-screen">
+            <div className="confirmation-header">
+              <h2 id="confirmation-title">🎉 Booking Confirmed!</h2>
+              <p className="confirmation-number">Confirmation #: {confirmedBooking.confirmationNumber}</p>
+            </div>
+
+            <div className="confirmation-details">
+              <div className="property-info">
+                <img src={confirmedBooking.property.images[0]} alt={confirmedBooking.property.address} />
+                <div>
+                  <h3>{confirmedBooking.property.address}</h3>
+                  <p>${confirmedBooking.property.price.toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="visit-details">
+                <h4>Visit Details</h4>
+                <p><strong>Date:</strong> {new Date(confirmedBooking.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <p><strong>Time:</strong> {confirmedBooking.time}</p>
+                <p><strong>Agent:</strong> {confirmedBooking.agent.name}</p>
+                <p><strong>Contact:</strong> {confirmedBooking.agent.phone}</p>
+              </div>
+            </div>
+
+            <div className="confirmation-actions">
+              <button
+                data-testid="add-to-calendar-btn"
+                className="btn primary"
+                onClick={handleAddToCalendar}
+              >
+                📅 Add to Calendar
+              </button>
+
+              <button
+                data-testid="reschedule-booking-btn"
+                className="btn secondary"
+                onClick={() => onReschedule?.(confirmedBooking.confirmationNumber, { date: '', time: '' })}
+              >
+                🔄 Reschedule
+              </button>
+
+              <button
+                data-testid="cancel-booking-btn"
+                className="btn danger"
+                onClick={onCancel}
+              >
+                ❌ Cancel Booking
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    )
+  }
+
+  return (
+    <div 
+      data-testid="modal-backdrop"
+      className="booking-modal-backdrop high-contrast-support"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onCancel()
+        }
+      }}
+      role="dialog"
+      aria-labelledby="booking-title"
+      aria-modal="true"
+    >
+      <div 
+        ref={modalRef}
+        data-testid="visit-booking-modal"
+        className="booking-modal high-contrast-support"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-labelledby="booking-title"
+        aria-modal="true"
+      >
+        {/* Header */}
+        <div className="booking-header">
+          <h2 id="booking-title">
+            {isReschedule ? 'Reschedule Property Visit' : 'Book Property Visit'}
+          </h2>
+          <button
+            ref={firstFocusableRef}
+            data-testid="close-modal-btn"
+            className="close-btn"
+            onClick={onCancel}
+            aria-label="Close booking modal"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div data-testid="booking-error" className="error-banner">
+            <p>{error}</p>
+            <button data-testid="retry-booking-btn" className="btn secondary small">
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* Current booking info for rescheduling */}
+        {isReschedule && existingBooking && (
+          <div data-testid="current-booking-header" className="current-booking-section">
+            <h4>Current Booking</h4>
+            <p>Current booking: {new Date(existingBooking.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p>Time: {existingBooking.time}</p>
+            {existingBooking.confirmationNumber && <p>Confirmation: {existingBooking.confirmationNumber}</p>}
+          </div>
+        )}
+
+        {/* Property Context */}
+        <div data-testid="booking-property-context" className="property-context">
+          <img 
+            src={property.images?.[0]} 
+            alt={property.address || 'Property'} 
+            className="property-thumbnail"
+          />
+          <div className="property-details">
+            <h3>{property.address || 'Property address unavailable'}</h3>
+            <p className="price">${property.price?.toLocaleString() || 'Price unavailable'}</p>
+            <p className="features">
+              {property.bedrooms || 0} bed • {property.bathrooms || 0} bath • {property.area_sqft?.toLocaleString() || 0} sqft
+            </p>
+          </div>
+        </div>
+
+        {/* Agent Information */}
+        {agent ? (
+          <div data-testid="booking-agent-info" className="agent-info">
+            <img src={agent.avatar} alt={agent.name} className="agent-avatar" />
+            <div>
+              <h4>{agent.name}</h4>
+              <p>{agent.phone}</p>
+              <p>{agent.email}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="agent-info">
+            <p>Agent information unavailable</p>
+            <button data-testid="contact-support-btn" className="btn secondary small">
+              Contact Support
+            </button>
+          </div>
+        )}
+
+        {/* Existing Booking Info (Rescheduling) */}
+        {isReschedule && existingBooking && (
+          <div data-testid="current-booking-info" className="current-booking">
+            <h4>Current Booking Details</h4>
+            <p>Current booking: {new Date(existingBooking.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} at {existingBooking.time}</p>
+            {existingBooking.confirmationNumber && (
+              <p>Confirmation: {existingBooking.confirmationNumber}</p>
+            )}
+          </div>
+        )}
+
+        {/* Calendar Selection */}
+        <div 
+          data-testid="booking-calendar" 
+          className="calendar-section"
+          role="application"
+          aria-label="Calendar for selecting visit date and time"
+        >
+          <h3>Select a Date and Time</h3>
+          
+          <div data-testid="timezone-info" className="timezone-info">
+            <p>All times shown in Eastern Time</p>
+          </div>
+
+          <div className="time-slots-grid">
+            {availableSlots.map((slot) => {
+              const isPast = isPastDate(slot.date)
+              const isCurrent = isCurrentBooking(slot.date, slot.time)
+              const isSelected = selectedDate === slot.date && selectedTime === slot.time
+              
+              return (
+                <button
+                  key={`${slot.date}-${slot.time}`}
+                  data-testid={getSlotTestId(slot.date, slot.time)}
+                  className={`time-slot ${
+                    !slot.available ? 'unavailable' : ''
+                  } ${isPast ? 'past-date' : ''} ${
+                    isCurrent ? 'current-booking' : ''
+                  } ${isSelected ? 'selected' : ''}`}
+                  disabled={!slot.available || isPast || loading}
+                  onClick={() => handleSlotSelection(slot.date, slot.time)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowRight') {
+                      e.preventDefault()
+                      const nextSlot = e.currentTarget.nextElementSibling as HTMLButtonElement
+                      nextSlot?.focus()
+                    } else if (e.key === 'ArrowLeft') {
+                      e.preventDefault()
+                      const prevSlot = e.currentTarget.previousElementSibling as HTMLButtonElement
+                      prevSlot?.focus()
+                    }
+                  }}
+                >
+                  <div className="slot-date">{new Date(slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                  <div className="slot-time">{slot.time}</div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Multi-property Booking Option */}
+        {enableMultiPropertyBooking && likedProperties.length > 1 && (
+          <div data-testid="multi-property-booking" className="multi-property-section">
+            <label>
+              <input
+                data-testid="multi-property-toggle"
+                type="checkbox"
+                checked={multiPropertyMode}
+                onChange={(e) => setMultiPropertyMode(e.target.checked)}
+                disabled={loading}
+              />
+              Book multiple properties in one visit
+            </label>
+
+            {multiPropertyMode && (
+              <div className="additional-properties">
+                {likedProperties
+                  .filter(p => p.id !== property.id)
+                  .map(prop => (
+                    <label key={prop.id}>
+                      <input
+                        data-testid={`additional-property-${prop.id}`}
+                        type="checkbox"
+                        checked={selectedAdditionalProperties.includes(prop.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedAdditionalProperties(prev => [...prev, prop.id])
+                          } else {
+                            setSelectedAdditionalProperties(prev => prev.filter(id => id !== prop.id))
+                          }
+                        }}
+                        disabled={loading}
+                      />
+                      {prop.address}
+                    </label>
+                  ))}
+                
+                {selectedAdditionalProperties.length > 0 && (
+                  <p>{selectedAdditionalProperties.length + 1} properties selected</p>
+                )}
+                
+                {multiPropertyMode && selectedAdditionalProperties.length > 0 && (
+                  <p>Estimated duration: {selectedAdditionalProperties.length + 1} hours</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Booking Summary */}
+        {selectedDate && selectedTime && (
+          <div data-testid="booking-summary" className="booking-summary">
+            <h4>Visit Summary</h4>
+            <p><strong>Property:</strong> {property.address}</p>
+            <p><strong>Date:</strong> {new Date(selectedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p><strong>Time:</strong> {selectedTime}</p>
+            {agent && <p><strong>Agent:</strong> {agent.name}</p>}
+          </div>
+        )}
+
+        {/* Booking Form */}
+        {selectedDate && selectedTime && (
+          <div data-testid="booking-form" className="booking-form">
+            <h3>Your Information</h3>
+            
+            {/* Visitor Information */}
+            <div className="form-section">
+              <h4>Contact Details</h4>
+              
+              <div className="form-group">
+                <label htmlFor="visitor-name">Full Name *</label>
+                <input
+                  id="visitor-name"
+                  data-testid="visitor-name-input"
+                  type="text"
+                  value={visitorInfo.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  disabled={loading}
+                  aria-describedby={formErrors.name ? 'name-error' : undefined}
+                />
+                {formErrors.name && (
+                  <div data-testid="name-error" id="name-error" className="field-error">
+                    {formErrors.name}
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="visitor-email">Email Address *</label>
+                <input
+                  id="visitor-email"
+                  data-testid="visitor-email-input"
+                  type="email"
+                  value={visitorInfo.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  onBlur={() => {
+                    if (visitorInfo.email && !/\S+@\S+\.\S+/.test(visitorInfo.email)) {
+                      setFormErrors(prev => ({ ...prev, email: 'Invalid email format' }))
+                    }
+                  }}
+                  disabled={loading}
+                  aria-describedby={formErrors.email ? 'email-error' : undefined}
+                />
+                {formErrors.email && (
+                  <div data-testid="email-error" id="email-error" className="field-error">
+                    {formErrors.email}
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="visitor-phone">Phone Number *</label>
+                <input
+                  id="visitor-phone"
+                  data-testid="visitor-phone-input"
+                  type="tel"
+                  value={visitorInfo.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  onBlur={() => {
+                    if (visitorInfo.phone && !/^\(\d{3}\) \d{3}-\d{4}$/.test(visitorInfo.phone)) {
+                      setFormErrors(prev => ({ ...prev, phone: 'Invalid phone number' }))
+                    }
+                  }}
+                  disabled={loading}
+                  placeholder="(555) 123-4567"
+                  aria-describedby={formErrors.phone ? 'phone-error' : undefined}
+                />
+                {formErrors.phone && (
+                  <div data-testid="phone-error" id="phone-error" className="field-error">
+                    {formErrors.phone}
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="group-size">Group Size</label>
+                <select
+                  id="group-size"
+                  data-testid="group-size-select"
+                  value={visitorInfo.groupSize}
+                  onChange={(e) => handleInputChange('groupSize', Number(e.target.value))}
+                  disabled={loading}
+                >
+                  <option value={1}>Just me</option>
+                  <option value={2}>2 people</option>
+                  <option value={3}>3 people</option>
+                  <option value={4}>4 people</option>
+                  <option value={5}>5+ people</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Visit Preferences */}
+            <div className="form-section">
+              <h4>Visit Preferences</h4>
+              
+              <div className="form-group">
+                <label htmlFor="special-requirements">Special Requirements</label>
+                <textarea
+                  id="special-requirements"
+                  data-testid="special-requirements-textarea"
+                  value={preferences.specialRequirements}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 500)
+                    handleInputChange('specialRequirements', value, 'preferences')
+                  }}
+                  disabled={loading}
+                  maxLength={500}
+                  placeholder="Any specific questions or areas of interest..."
+                />
+                <div data-testid="special-requirements-counter" className="character-counter">
+                  {preferences.specialRequirements.length}/500
+                </div>
+              </div>
+
+              <div className="checkbox-group">
+                <label>
+                  <input
+                    data-testid="accessibility-needs-checkbox"
+                    type="checkbox"
+                    checked={preferences.accessibilityNeeds}
+                    onChange={(e) => handleInputChange('accessibilityNeeds', e.target.checked, 'preferences')}
+                    disabled={loading}
+                  />
+                  I have accessibility needs
+                </label>
+
+                <label>
+                  <input
+                    data-testid="budget-discussion-checkbox"
+                    type="checkbox"
+                    checked={preferences.budgetDiscussion}
+                    onChange={(e) => handleInputChange('budgetDiscussion', e.target.checked, 'preferences')}
+                    disabled={loading}
+                  />
+                  I'd like to discuss budget options
+                </label>
+
+                <label>
+                  <input
+                    data-testid="financing-discussion-checkbox"
+                    type="checkbox"
+                    checked={preferences.financingDiscussion}
+                    onChange={(e) => handleInputChange('financingDiscussion', e.target.checked, 'preferences')}
+                    disabled={loading}
+                  />
+                  I need financing information
+                </label>
+              </div>
+            </div>
+
+            {/* Additional Requests */}
+            <div className="form-section">
+              <h4>Additional Services</h4>
+              
+              <div className="checkbox-group">
+                <label>
+                  <input
+                    data-testid="neighborhood-tour-checkbox"
+                    type="checkbox"
+                    checked={additionalRequests.neighborhoodTour}
+                    onChange={(e) => handleInputChange('neighborhoodTour', e.target.checked, 'requests')}
+                    disabled={loading}
+                  />
+                  Include neighborhood tour
+                </label>
+
+                <label>
+                  <input
+                    data-testid="comparable-properties-checkbox"
+                    type="checkbox"
+                    checked={additionalRequests.comparableProperties}
+                    onChange={(e) => handleInputChange('comparableProperties', e.target.checked, 'requests')}
+                    disabled={loading}
+                  />
+                  Show comparable properties
+                </label>
+
+                <label>
+                  <input
+                    data-testid="market-analysis-checkbox"
+                    type="checkbox"
+                    checked={additionalRequests.marketAnalysis}
+                    onChange={(e) => handleInputChange('marketAnalysis', e.target.checked, 'requests')}
+                    disabled={loading}
+                  />
+                  Provide market analysis
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="custom-notes">Additional Notes</label>
+                <textarea
+                  id="custom-notes"
+                  data-testid="custom-notes-textarea"
+                  value={additionalRequests.customNotes}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 1000)
+                    handleInputChange('customNotes', value, 'requests')
+                  }}
+                  disabled={loading}
+                  maxLength={1000}
+                  placeholder="Any other requests or information..."
+                />
+                <div data-testid="custom-notes-counter" className="character-counter">
+                  {additionalRequests.customNotes.length}/1000
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Actions */}
+        <div className="modal-actions">
+          <button
+            data-testid="cancel-booking-btn"
+            className="btn secondary"
+            onClick={onCancel}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+
+          <button
+            data-testid={isReschedule ? "confirm-reschedule-btn" : "submit-booking-btn"}
+            className="btn primary"
+            onClick={handleSubmit}
+            disabled={loading || !selectedDate || !selectedTime}
+          >
+            {loading && <span data-testid="booking-loading-spinner">⏳</span>}
+            {loading 
+              ? <span>Submitting booking...</span>
+              : isReschedule 
+                ? 'Confirm Reschedule' 
+                : 'Book Visit'
+            }
+          </button>
+        </div>
+
+        {/* Screen Reader Live Region */}
+        <div 
+          data-testid="booking-live-region"
+          className="sr-only"
+          aria-live="polite"
+          aria-atomic="true"
+        />
+      </div>
+    </div>
+  )
+}
+
+export default VisitBooking

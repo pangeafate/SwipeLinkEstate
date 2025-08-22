@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useState, useMemo } from 'react'
 import { formatPrice, formatBedsBaths, formatArea, formatShortAddress, formatFeatures } from '@/lib/utils/formatters'
 import type { PropertyCardProps } from '../types'
 
@@ -41,6 +42,14 @@ export default function PropertyCard({
   const displayFeatures = formatFeatures(features)
   const shortAddress = formatShortAddress(property.address)
 
+  const fallback = '/api/placeholder/400/300'
+  const initialSrc = (property.cover_image || images[0] || '/images/properties/sample-1.jpg') as string
+  const [imgSrc, setImgSrc] = useState<string>(initialSrc)
+  const blurDataURL = useMemo(
+    () => 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZWVlIi8+PC9zdmc+',
+    []
+  )
+
   return (
     <div
       data-testid="property-card"
@@ -50,11 +59,14 @@ export default function PropertyCard({
       {/* Image Section */}
       <div className="relative h-48 w-full">
         <Image
-          src={property.cover_image || images[0] || '/images/properties/sample-1.jpg'}
+          src={imgSrc}
           alt={property.address}
           fill
           className="object-cover rounded-t-xl"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          placeholder="blur"
+          blurDataURL={blurDataURL}
+          onError={() => setImgSrc(fallback)}
         />
         
         {/* Status Indicator */}

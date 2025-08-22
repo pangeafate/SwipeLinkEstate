@@ -28,8 +28,8 @@ INSERT INTO properties (
     1200,
     'Stunning oceanfront condo with panoramic views of the Atlantic Ocean. This modern 2-bedroom, 2-bathroom unit features floor-to-ceiling windows, a spacious balcony, and access to world-class amenities including a rooftop pool, fitness center, and 24/7 concierge service.',
     '["Ocean View", "Balcony", "Pool", "Gym", "Concierge", "Modern Kitchen"]',
-    '/property-images/apartment1/0f30e2cbee415a4b38ebc3b0f380c05f.webp',
-    '["/property-images/apartment1/0f30e2cbee415a4b38ebc3b0f380c05f.webp", "/property-images/apartment1/1b8ed1647b39d2d109fecd9a6f51347f.webp", "/property-images/apartment1/486f7485494934d78970542bf8c21411.webp", "/property-images/apartment1/79766678faa8d1e4370aefc7c8cd8b32.webp", "/property-images/apartment1/83e4294427ebd50d46c565544dee70c4.webp"]',
+    '/images/properties/Apartment 1/0f30e2cbee415a4b38ebc3b0f380c05f.webp',
+    '["/images/properties/Apartment 1/0f30e2cbee415a4b38ebc3b0f380c05f.webp", "/images/properties/Apartment 1/1b8ed1647b39d2d109fecd9a6f51347f.webp", "/images/properties/Apartment 1/486f7485494934d78970542bf8c21411.webp", "/images/properties/Apartment 1/79766678faa8d1e4370aefc7c8cd8b32.webp", "/images/properties/Apartment 1/83e4294427ebd50d46c565544dee70c4.webp"]',
     'active'
 ),
 
@@ -43,8 +43,8 @@ INSERT INTO properties (
     1800,
     'Luxury penthouse in the heart of South Beach with breathtaking city and ocean views. This spacious 3-bedroom, 2.5-bathroom residence features premium finishes, a gourmet kitchen, and a private rooftop terrace. Located steps from world-renowned restaurants, shopping, and nightlife.',
     '["Penthouse", "Rooftop Terrace", "City View", "Ocean View", "Premium Finishes", "South Beach Location"]',
-    '/property-images/apartment2/2ac8aed28b4f90e44a6692d10d4f87f6.webp',
-    '["/property-images/apartment2/2ac8aed28b4f90e44a6692d10d4f87f6.webp", "/property-images/apartment2/cc6ced18d0f1931ca493c80e8f58ab04.webp", "/property-images/apartment2/db0ff6b479a0a729313108a635b81653.webp", "/property-images/apartment2/df007c9083b7168e7e8a093cd1516660.webp"]',
+    '/images/properties/Apartment 2/2ac8aed28b4f90e44a6692d10d4f87f6.webp',
+    '["/images/properties/Apartment 2/2ac8aed28b4f90e44a6692d10d4f87f6.webp", "/images/properties/Apartment 2/cc6ced18d0f1931ca493c80e8f58ab04.webp", "/images/properties/Apartment 2/db0ff6b479a0a729313108a635b81653.webp", "/images/properties/Apartment 2/df007c9083b7168e7e8a093cd1516660.webp"]',
     'active'
 ),
 
@@ -58,8 +58,8 @@ INSERT INTO properties (
     900,
     'Modern studio apartment with high-end finishes and contemporary design. Located on prestigious Lincoln Road, this unit offers the perfect blend of luxury and convenience. Features include stainless steel appliances, marble countertops, and access to building amenities.',
     '["Modern Design", "High Ceilings", "Stainless Appliances", "Marble Countertops", "Lincoln Road"]',
-    '/property-images/apartment3/hd_zp_at_67fce865dc4d4-scaled.jpeg',
-    '["/property-images/apartment3/hd_zp_at_67fce865dc4d4-scaled.jpeg", "/property-images/apartment3/hd_zp_at_67fce86f2d57c-scaled.jpeg", "/property-images/apartment3/hd_zp_at_67fce88e9a123-scaled.jpeg"]',
+    '/images/properties/Apartment 3/hd_zp_at_67fce865dc4d4-scaled.jpeg',
+    '["/images/properties/Apartment 3/hd_zp_at_67fce865dc4d4-scaled.jpeg", "/images/properties/Apartment 3/hd_zp_at_67fce86f2d57c-scaled.jpeg", "/images/properties/Apartment 3/hd_zp_at_67fce88e9a123-scaled.jpeg"]',
     'active'
 ),
 
@@ -73,8 +73,8 @@ INSERT INTO properties (
     2500,
     'Spacious family home with private pool and garden in prime Miami Beach location. This beautiful 4-bedroom, 3.5-bathroom house offers ample space for entertaining with an open-concept living area, gourmet kitchen, and multiple outdoor spaces. Perfect for families seeking luxury and comfort.',
     '["Private Pool", "Garden", "Garage", "Family Room", "Open Concept", "Gourmet Kitchen"]',
-    '/property-images/house1/property-image-2281ef1a-85f7-4dd6-b7dc-b75d0b5a3cd3-1755444910.jpg',
-    '["/property-images/house1/property-image-2281ef1a-85f7-4dd6-b7dc-b75d0b5a3cd3-1755444910.jpg", "/property-images/house1/property-image-7e7e34df-f007-4d33-b531-05e2ddfe3ed4-1755444911.jpg", "/property-images/house1/property-image-b1d25d8c-4f94-4a73-a418-4d4cfd5ab979-1755444911.jpg"]',
+    '/images/properties/House 1/property-image-2281ef1a-85f7-4dd6-b7dc-b75d0b5a3cd3-1755444910.jpg',
+    '["/images/properties/House 1/property-image-2281ef1a-85f7-4dd6-b7dc-b75d0b5a3cd3-1755444910.jpg", "/images/properties/House 1/property-image-7e7e34df-f007-4d33-b531-05e2ddfe3ed4-1755444911.jpg", "/images/properties/House 1/property-image-b1d25d8c-4f94-4a73-a418-4d4cfd5ab979-1755444911.jpg"]',
     'active'
 ),
 
@@ -88,8 +88,8 @@ INSERT INTO properties (
     3200, 
     'Spectacular waterfront estate with private dock and panoramic bay views. This magnificent 5-bedroom, 4-bathroom home features luxurious appointments throughout, including a chef''s kitchen, wine cellar, and resort-style outdoor living area with infinity pool and spa.',
     '["Waterfront", "Private Dock", "Bay Views", "Infinity Pool", "Wine Cellar", "Chef Kitchen"]',
-    '/property-images/house2/Screenshot 2025-08-18 at 11.18.49 AM.png',
-    '["/property-images/house2/Screenshot 2025-08-18 at 11.18.49 AM.png", "/property-images/house2/Screenshot 2025-08-18 at 11.18.59 AM.png", "/property-images/house2/Screenshot 2025-08-18 at 11.19.10 AM.png"]',
+    '/images/properties/House 2/Screenshot 2025-08-18 at 11.18.49 AM.png',
+    '["/images/properties/House 2/Screenshot 2025-08-18 at 11.18.49 AM.png", "/images/properties/House 2/Screenshot 2025-08-18 at 11.18.59 AM.png", "/images/properties/House 2/Screenshot 2025-08-18 at 11.19.10 AM.png"]',
     'active'
 ),
 
@@ -103,8 +103,8 @@ INSERT INTO properties (
     2200,
     'Contemporary home with sleek design and premium amenities in sought-after Sunset Harbor. This 3-bedroom, 2.5-bathroom residence showcases clean lines, floor-to-ceiling windows, and an open floor plan. The property includes a private courtyard and is walking distance to trendy restaurants and marinas.',
     '["Contemporary Design", "Floor to Ceiling Windows", "Open Floor Plan", "Private Courtyard", "Sunset Harbor"]',
-    '/property-images/house3/hd_zp_at_6808c7118481e-scaled.jpeg',
-    '["/property-images/house3/hd_zp_at_6808c7118481e-scaled.jpeg", "/property-images/house3/hd_zp_at_6808c7184f281-scaled.jpeg", "/property-images/house3/hd_zp_at_6808c71b60b57-scaled.jpeg", "/property-images/house3/hd_zp_at_685bc663652e1.jpeg"]',
+    '/images/properties/House 3/hd_zp_at_6808c7118481e-scaled.jpeg',
+    '["/images/properties/House 3/hd_zp_at_6808c7118481e-scaled.jpeg", "/images/properties/House 3/hd_zp_at_6808c7184f281-scaled.jpeg", "/images/properties/House 3/hd_zp_at_6808c71b60b57-scaled.jpeg", "/images/properties/House 3/hd_zp_at_685bc663652e1.jpeg"]',
     'active'
 );
 

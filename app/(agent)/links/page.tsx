@@ -1,17 +1,26 @@
 'use client'
 
 import Link from 'next/link'
+import { AgentNavigation } from '@/components/shared/AgentNavigation'
 import { useState } from 'react'
 import { LinkCreator } from '@/components/link'
+import { useLinksQuery } from '@/lib/query/useLinksQuery'
 import type { Link as LinkType } from '@/components/link'
 
 export default function LinksPage() {
   const [showCreator, setShowCreator] = useState(false)
   const [createdLinks, setCreatedLinks] = useState<LinkType[]>([])
+  
+  // Fetch existing links from database
+  const { data: existingLinks = [], refetch: refetchLinks } = useLinksQuery()
 
-  const handleLinkCreated = (link: LinkType) => {
+  const handleLinkCreated = async (link: LinkType) => {
     setCreatedLinks(prev => [link, ...prev])
     setShowCreator(false)
+    // Refetch to get updated links from database
+    await refetchLinks()
+    // Clear local created links since they're now in existingLinks from database
+    setCreatedLinks([])
   }
 
   const handleCancel = () => {
@@ -51,32 +60,7 @@ export default function LinksPage() {
               </Link>
               <span className="ml-4 text-sm text-gray-500">Links Management</span>
             </div>
-            <nav className="flex space-x-4">
-              <Link 
-                href="/dashboard" 
-                className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Dashboard
-              </Link>
-              <Link 
-                href="/properties" 
-                className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Properties
-              </Link>
-              <Link 
-                href="/links" 
-                className="text-gray-900 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Links
-              </Link>
-              <Link 
-                href="/analytics" 
-                className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Analytics
-              </Link>
-            </nav>
+            <AgentNavigation />
           </div>
         </div>
       </header>
@@ -99,9 +83,10 @@ export default function LinksPage() {
         </div>
 
         {/* Links List */}
-        {createdLinks.length > 0 ? (
+        {(existingLinks.length > 0 || createdLinks.length > 0) ? (
           <div className="grid gap-4">
-            {createdLinks.map(link => (
+            {/* Show new links first, then existing links */}
+            {[...createdLinks, ...existingLinks].map(link => (
               <div key={link.id} className="bg-white rounded-lg shadow p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">

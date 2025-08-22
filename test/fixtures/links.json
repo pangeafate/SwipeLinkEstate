@@ -1,0 +1,66 @@
+[
+  {
+    "id": "link-1",
+    "code": "abc123def",
+    "name": "Luxury Properties Collection",
+    "property_ids": ["prop-3", "prop-5"],
+    "created_at": "2023-10-15T09:00:00.000Z",
+    "expires_at": null
+  },
+  {
+    "id": "link-2",
+    "code": "xyz789ghi",
+    "name": "First-Time Buyer Options",
+    "property_ids": ["prop-1", "prop-2", "prop-4"],
+    "created_at": "2023-10-16T14:30:00.000Z",
+    "expires_at": "2023-12-16T14:30:00.000Z"
+  },
+  {
+    "id": "link-3",
+    "code": "jkl456mno",
+    "name": "Family Homes",
+    "property_ids": ["prop-1", "prop-3", "prop-6", "prop-8"],
+    "created_at": "2023-10-17T11:15:00.000Z",
+    "expires_at": null
+  },
+  {
+    "id": "link-4",
+    "code": "pqr123stu",
+    "name": "Urban Living",
+    "property_ids": ["prop-2", "prop-4", "prop-9"],
+    "created_at": "2023-10-18T16:45:00.000Z",
+    "expires_at": "2024-01-18T16:45:00.000Z"
+  },
+  {
+    "id": "link-5",
+    "code": "vwx789yza",
+    "name": "Investment Opportunities",
+    "property_ids": ["prop-2", "prop-4", "prop-7", "prop-10"],
+    "created_at": "2023-10-19T08:20:00.000Z",
+    "expires_at": null
+  },
+  {
+    "id": "link-6",
+    "code": "bcd456efg",
+    "name": "Townhouse Selection",
+    "property_ids": ["prop-6", "prop-10"],
+    "created_at": "2023-10-20T13:00:00.000Z",
+    "expires_at": "2023-11-20T13:00:00.000Z"
+  },
+  {
+    "id": "link-7",
+    "code": "hij123klm",
+    "name": "Budget-Friendly Options",
+    "property_ids": ["prop-2", "prop-4", "prop-7"],
+    "created_at": "2023-10-21T10:30:00.000Z",
+    "expires_at": null
+  },
+  {
+    "id": "link-8",
+    "code": "nop789qrs",
+    "name": "Premium Listings",
+    "property_ids": ["prop-5", "prop-8", "prop-9"],
+    "created_at": "2023-10-22T15:45:00.000Z",
+    "expires_at": "2024-02-22T15:45:00.000Z"
+  }
+]

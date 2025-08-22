@@ -5,6 +5,7 @@ export { SwipeService } from './swipe.service'
 
 // Components
 export { default as SwipeInterface } from './components/SwipeInterface'
+export { default as SwipeInterfaceV2 } from './components/SwipeInterfaceV2'
 export { default as PropertySwipeCard } from './components/PropertySwipeCard'
 
 // Types

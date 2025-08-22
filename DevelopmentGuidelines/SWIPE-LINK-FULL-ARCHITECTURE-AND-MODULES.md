@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-A revolutionary real estate platform that combines a Tinder-like property browsing experience with comprehensive CRM functionality. The platform operates on a unique "Link-Centric" model where property collections (links) serve as enhanced deals, maintaining frictionless client access while providing agents with full relationship management capabilities.
+A revolutionary real estate platform that combines an intuitive carousel-based property browsing experience with comprehensive CRM functionality. The platform operates on a unique "Link-Centric" model where property collections (links) serve as enhanced deals, maintaining frictionless client access while providing agents with full relationship management capabilities and meaningful client engagement insights.
 
 ## Core Philosophy
 
@@ -11,7 +11,7 @@ A revolutionary real estate platform that combines a Tinder-like property browsi
 ```
 ┌─────────────────────────────────────────┐
 │     Surface Layer (Innovation)          │
-│   Portfolio → Link → Swipe → Chat       │
+│   Portfolio → Link → Carousel → Buckets │
 ├─────────────────────────────────────────┤
 │     Foundation Layer (CRM Engine)       │
 │   Contacts → Pipeline → Tasks → Analytics│
@@ -35,10 +35,12 @@ A revolutionary real estate platform that combines a Tinder-like property browsi
 2. **Property Management Module**
 3. **Portfolio Management Module**
 4. **Link Management Module** (Enhanced with CRM)
-5. **Client Interface Module** (Tinder View)
+5. **Client Link Interface Module** (Carousel View)
 6. **Chat & Communication Module**
 
 ### CRM Enhancement Modules
+
+📚 **For complete CRM specifications, see CRM-MASTER-SPECIFICATION.md**
 
 7. **Contact Management Module**
 8. **Pipeline & Stage Management Module**
@@ -144,35 +146,45 @@ Smart: Rule-based auto-updating
 
 #### Link Lifecycle
 
+📚 **See CRM-MASTER-SPECIFICATION.md Section 2.1 for authoritative Deal Lifecycle Stages**
+
 ```
-Created → Shared → Engaged → Touring → Negotiating → Closed/Lost
-   ↓        ↓         ↓         ↓          ↓            ↓
-Template  Sent    Swiping  Viewings  Offers made   Deal done
+Note: The official deal lifecycle has 7 stages as defined in the CRM Master Specification:
+Created → Shared → Accessed → Engaged → Qualified → Advanced → Closed
 ```
 
-### Module 5: Client Interface (Tinder View)
+### Module 5: Client Link Interface (Carousel View)
 
 #### Functionality
 
-- 4-directional swipe interface
-- Property card display with photos
-- Gesture recognition and animations
-- Filter and preference application
-- Bucket organization (Liked/Disliked/Considering/New)
-- Property detail view
-- Comparison mode
-- Share functionality
+- Carousel-based property navigation system
+- Property card display with progressive image loading
+- Expandable property details with full media gallery
+- Advanced bucket organization (Liked/Considering/Disliked/Booked)
+- Interactive map integration with neighborhood context
+- Visit booking system with calendar integration
+- Collection overview with statistics visualization
+- Share functionality with social media integration
 - Progressive Web App capabilities
-- Offline mode with sync
+- Offline mode with intelligent caching
 
-#### Swipe Actions
+#### Interface Components
 
 ```
-Right → Like (save to liked bucket)
-Left → Dislike (save to disliked bucket)
-Down → Consider (save for later)
-Up → Details (show full information)
+Collection Landing → Property Carousel → Expanded Details → Bucket Management
+        ↓                    ↓                  ↓                 ↓
+   Overview Stats    Navigation System    Media Gallery    Organized Preferences
+        ↓                    ↓                  ↓                 ↓  
+   Agent Branding    Touch/Click/Keys     Map Integration   Visit Booking
 ```
+
+#### Interaction Patterns
+
+- **Carousel Navigation**: Left/right navigation through properties
+- **Property Expansion**: Click/tap for detailed property view
+- **Bucket Assignment**: Intuitive property categorization
+- **Visit Booking**: Direct scheduling from property cards
+- **Session Summary**: Comprehensive preference overview
 
 ### Module 6: Chat & Communication
 
@@ -240,9 +252,11 @@ Complete Profile (all details)
 
 #### Default Pipeline
 
+📚 **See CRM-MASTER-SPECIFICATION.md Section 2.1 for official Deal Stages**
+
 ```
-New Lead → First Contact → Qualified → Property Tour → 
-Offer Made → Under Contract → Closed Won/Lost
+Official Pipeline Stages (7 stages):
+Created → Shared → Accessed → Engaged → Qualified → Advanced → Closed
 ```
 
 ### Module 8.1: Supervisor & Team Management Module
@@ -573,10 +587,10 @@ LINKS (Enhanced Deals)
 
 ```
 EVENTS Table
-    ├── event_type (swipe, view, chat, etc.)
+    ├── event_type (action, view, chat, etc.)
     ├── entity_type (property, link, contact)
     ├── entity_id
-    ├── metadata (direction, duration, etc.)
+    ├── metadata (button_type, duration, etc.)
     └── timestamp
 ```
 
@@ -603,13 +617,15 @@ EVENTS Table
 ```
 1. Receive Link (SMS/Email)
 2. Click Link (No Login)
-3. View Properties (Swipe)
-4. Filter/Sort
-5. Review Buckets
-6. Chat with Agent
-7. Schedule Viewing
-8. Receive Documents
-9. Complete Transaction
+3. View Collection Overview
+4. Browse Properties (Carousel)
+5. Expand Property Details
+6. Assign to Buckets (Like/Consider/Dislike)
+7. Book Property Visits
+8. Review Organized Preferences
+9. Chat with Agent
+10. Receive Documents
+11. Complete Transaction
 ```
 
 ### Supervisor/Team Leader Flow
@@ -775,10 +791,12 @@ Instead of complex pipeline stages, use simple visual indicators:
 
 #### Engagement Score Instead of Stages
 
+📚 **See CRM-MASTER-SPECIFICATION.md Section 3.1 for Engagement Scoring Algorithm**
+
 ```
-John Smith ████████░░ 82% Engaged
-Last Active: 2 hours ago
-Next Action: Send new listings
+Engagement Score: 0-100 points (4 components)
+Temperature: Hot (80-100), Warm (50-79), Cold (0-49)
+Example: John Smith ████████░░ 82% (Hot Lead)
 ```
 
 ### 5. One-Click CRM Actions
@@ -986,7 +1004,7 @@ Full access to all data and settings
 - Property Management
 - Portfolio Management
 - Basic Link Management
-- Client Interface (Tinder View)
+- Client Link Interface (Carousel View)
 
 ### Phase 2: Communication (Weeks 5-6)
 
@@ -1043,13 +1061,14 @@ Hosting: Vercel
 
 ```
 Chat UI: react-chat-elements
-Swipe: react-tinder-card
+Carousel: embla-carousel-react / swiper
 Calendar: react-big-calendar
 Email: Resend/SendGrid
 SMS: Twilio
 Documents: DocuSign API
 Maps: Mapbox/Google Maps
 Analytics: Mixpanel/Amplitude
+Image Optimization: Next.js Image / Cloudinary
 ```
 
 ## Success Metrics
@@ -1058,8 +1077,10 @@ Analytics: Mixpanel/Amplitude
 
 - Link creation rate
 - Client engagement rate
-- Swipe-to-inquiry conversion
-- Property view depth
+- Carousel completion rate
+- Property detail view rate
+- Bucket assignment rate
+- Visit booking conversion
 - Chat response time
 
 ### CRM Metrics

@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AgentDashboard from '../page'
 
 // Mock Next.js Link component
@@ -11,6 +12,16 @@ jest.mock('next/link', () => {
   MockLink.displayName = 'MockLink'
   return MockLink
 })
+
+// Mock Next.js useRouter hook
+const mockPush = jest.fn()
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: jest.fn(),
+    back: jest.fn(),
+  }),
+}))
 
 // Mock PropertyService
 jest.mock('@/components/property', () => ({
@@ -106,6 +117,26 @@ const mockProperties = [
     cover_image: 'image3.jpg'
   }
 ]
+
+// Test wrapper with QueryClient
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: Infinity,
+      },
+    },
+  })
+
+  const MockProvider = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  )
+  MockProvider.displayName = 'MockProvider'
+  return MockProvider
+}
 
 describe('AgentDashboard', () => {
   beforeEach(() => {
@@ -474,5 +505,48 @@ describe('AgentDashboard', () => {
     // ASSERT - Modal should be hidden and new property added
     expect(screen.queryByTestId('property-form-modal')).not.toBeInTheDocument()
     expect(screen.getByText('Test Address')).toBeInTheDocument()
+  })
+
+  it('should navigate to links page with selected properties when Create Link button is clicked', async () => {
+    // ARRANGE
+    const user = userEvent.setup()
+    
+    // Clear previous mock calls
+    mockPush.mockClear()
+    
+    await act(async () => {
+      render(<AgentDashboard />, { wrapper: createWrapper() })
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('123 Ocean Drive')).toBeInTheDocument()
+    })
+
+    // ACT - Select first property
+    await act(async () => {
+      await user.click(screen.getByTestId('agent-property-card-prop-1'))
+    })
+
+    // Verify first selection
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
+    expect(screen.getByText('Create Link')).toBeInTheDocument()
+
+    // ACT - Select second property  
+    await act(async () => {
+      await user.click(screen.getByTestId('agent-property-card-prop-2'))
+    })
+
+    // Verify both selections
+    expect(screen.getByText('2 selected')).toBeInTheDocument()
+    expect(screen.getByText('Create Link')).toBeInTheDocument()
+
+    // ACT - Click Create Link button
+    const createLinkButton = screen.getByText('Create Link')
+    await act(async () => {
+      await user.click(createLinkButton)
+    })
+
+    // ASSERT - Should navigate to links page with selected property IDs
+    expect(mockPush).toHaveBeenCalledWith('/links?selected=prop-1,prop-2')
   })
 })

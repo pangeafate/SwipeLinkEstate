@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { QueryProvider } from '@/lib/query/QueryProvider'
+import { PageErrorBoundary } from '@/lib/errors/ErrorBoundary'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,7 +21,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <div id="root">
-          {children}
+          <PageErrorBoundary>
+            <QueryProvider>
+              {children}
+            </QueryProvider>
+          </PageErrorBoundary>
         </div>
       </body>
     </html>

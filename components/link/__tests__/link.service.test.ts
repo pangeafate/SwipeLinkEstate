@@ -1,28 +1,18 @@
-// Simple mock that we can control in each test
-const mockSingle = jest.fn()
-const mockOrder = jest.fn(() => Promise.resolve({ data: [], error: null }))
-const mockEq = jest.fn(() => ({ single: mockSingle }))
-const mockIn = jest.fn(() => Promise.resolve({ data: [], error: null }))
-const mockSelect = jest.fn(() => ({ eq: mockEq, single: mockSingle, in: mockIn, order: mockOrder }))
-const mockInsert = jest.fn(() => ({ select: mockSelect }))
-const mockFrom = jest.fn(() => ({
-  insert: mockInsert,
-  select: mockSelect,
-  order: mockOrder
-}))
+import { LinkService } from '../link.service'
+import { setupTest } from '@/test/utils/testSetup'
+import { SupabaseMockFactory } from '@/test/mocks'
+
+// Mock Supabase client
+const mockSupabaseClient = {
+  from: jest.fn(),
+}
 
 jest.mock('@/lib/supabase/client', () => ({
-  createClient: () => ({
-    from: mockFrom
-  })
+  createClient: () => mockSupabaseClient
 }))
 
-import { LinkService } from '../link.service'
-
 describe('LinkService', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
+  setupTest({ suppressConsoleErrors: true })
 
   describe('createLink', () => {
     it('should create a new link with property IDs and optional name', async () => {
@@ -39,10 +29,14 @@ describe('LinkService', () => {
         expires_at: null
       }
 
-      mockSingle.mockResolvedValue({
+      // Setup mock chain for insert operation: .from('links').insert().select().single()
+      const mockSingle = jest.fn().mockResolvedValue({
         data: mockLinkData,
         error: null
       })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockInsert = jest.fn().mockReturnValue({ select: mockSelect })
+      mockSupabaseClient.from.mockReturnValue({ insert: mockInsert })
 
       // ACT
       const result = await LinkService.createLink(propertyIds, name)
@@ -53,7 +47,7 @@ describe('LinkService', () => {
       expect(result.code).toHaveLength(8)
       expect(result.property_ids).toEqual(propertyIds)
       expect(result.name).toBe(name)
-      expect(mockFrom).toHaveBeenCalledWith('links')
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('links')
     })
 
     it('should create a link without name', async () => {
@@ -69,10 +63,14 @@ describe('LinkService', () => {
         expires_at: null
       }
 
-      mockSingle.mockResolvedValue({
+      // Setup mock chain for insert operation
+      const mockSingle = jest.fn().mockResolvedValue({
         data: mockLinkData,
         error: null
       })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockInsert = jest.fn().mockReturnValue({ select: mockSelect })
+      mockSupabaseClient.from.mockReturnValue({ insert: mockInsert })
 
       // ACT
       const result = await LinkService.createLink(propertyIds)
@@ -98,10 +96,14 @@ describe('LinkService', () => {
       // ARRANGE
       const propertyIds = ['uuid-1']
       
-      mockSingle.mockResolvedValue({
+      // Setup mock chain for insert operation that fails
+      const mockSingle = jest.fn().mockResolvedValue({
         data: null,
         error: { message: 'Database error' }
       })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockInsert = jest.fn().mockReturnValue({ select: mockSelect })
+      mockSupabaseClient.from.mockReturnValue({ insert: mockInsert })
 
       // ACT & ASSERT
       await expect(LinkService.createLink(propertyIds))
@@ -157,16 +159,30 @@ describe('LinkService', () => {
         }
       ]
 
-      // Mock the first call to get the link
-      mockSingle.mockResolvedValueOnce({
+      // Setup mock chain for first query: .from('links').select('*').eq('code', code).single()
+      const mockSingleForLink = jest.fn().mockResolvedValue({
         data: mockLink,
         error: null
       })
+      const mockEqForLink = jest.fn().mockReturnValue({ single: mockSingleForLink })
+      const mockSelectForLink = jest.fn().mockReturnValue({ eq: mockEqForLink })
 
-      // Mock the second call to get properties
-      mockIn.mockResolvedValueOnce({
-        data: mockProperties as any,
+      // Setup mock chain for second query: .from('properties').select('*').in('id', propertyIds)
+      // Note: Status filter removed to fix link preview issue
+      const mockInForProperties = jest.fn().mockResolvedValue({
+        data: mockProperties,
         error: null
+      })
+      const mockSelectForProperties = jest.fn().mockReturnValue({ in: mockInForProperties })
+
+      // Mock different behaviors for different table calls
+      mockSupabaseClient.from.mockImplementation((table: string) => {
+        if (table === 'links') {
+          return { select: mockSelectForLink }
+        } else if (table === 'properties') {
+          return { select: mockSelectForProperties }
+        }
+        throw new Error(`Unexpected table: ${table}`)
       })
 
       // ACT
@@ -177,18 +193,22 @@ describe('LinkService', () => {
       expect(result.code).toBe(linkCode)
       expect(result.properties).toHaveLength(2)
       expect(result.properties[0].address).toBe('123 Test St')
-      expect(mockFrom).toHaveBeenCalledWith('links')
-      expect(mockFrom).toHaveBeenCalledWith('properties')
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('links')
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('properties')
     })
 
     it('should throw error when link not found', async () => {
       // ARRANGE
       const linkCode = 'NOTFOUND'
       
-      mockSingle.mockResolvedValue({
+      // Setup mock chain for first query that fails
+      const mockSingleForLink = jest.fn().mockResolvedValue({
         data: null,
         error: { message: 'Link not found' }
       })
+      const mockEqForLink = jest.fn().mockReturnValue({ single: mockSingleForLink })
+      const mockSelectForLink = jest.fn().mockReturnValue({ eq: mockEqForLink })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelectForLink })
 
       // ACT & ASSERT
       await expect(LinkService.getLink(linkCode))
@@ -209,16 +229,29 @@ describe('LinkService', () => {
         expires_at: null
       }
 
-      // Mock successful link retrieval
-      mockSingle.mockResolvedValueOnce({
+      // Setup mock chain for successful link retrieval
+      const mockSingleForLink = jest.fn().mockResolvedValue({
         data: mockLink,
         error: null
       })
+      const mockEqForLink = jest.fn().mockReturnValue({ single: mockSingleForLink })
+      const mockSelectForLink = jest.fn().mockReturnValue({ eq: mockEqForLink })
 
-      // Mock failed properties loading
-      mockIn.mockResolvedValueOnce({
+      // Setup mock chain for failed properties loading  
+      const mockInForProperties = jest.fn().mockResolvedValue({
         data: null,
         error: { message: 'Failed to load properties' }
+      })
+      const mockSelectForProperties = jest.fn().mockReturnValue({ in: mockInForProperties })
+
+      // Mock different behaviors for different table calls
+      mockSupabaseClient.from.mockImplementation((table: string) => {
+        if (table === 'links') {
+          return { select: mockSelectForLink }
+        } else if (table === 'properties') {
+          return { select: mockSelectForProperties }
+        }
+        throw new Error(`Unexpected table: ${table}`)
       })
 
       // ACT & ASSERT
@@ -240,16 +273,29 @@ describe('LinkService', () => {
         expires_at: null
       }
 
-      // Mock successful link retrieval
-      mockSingle.mockResolvedValueOnce({
+      // Setup mock chain for successful link retrieval
+      const mockSingleForLink = jest.fn().mockResolvedValue({
         data: mockLink,
         error: null
       })
+      const mockEqForLink = jest.fn().mockReturnValue({ single: mockSingleForLink })
+      const mockSelectForLink = jest.fn().mockReturnValue({ eq: mockEqForLink })
 
-      // Mock properties loading returning null data but no error
-      mockIn.mockResolvedValueOnce({
+      // Setup mock chain for empty properties result
+      const mockInForProperties = jest.fn().mockResolvedValue({
         data: null,
         error: null
+      })
+      const mockSelectForProperties = jest.fn().mockReturnValue({ in: mockInForProperties })
+
+      // Mock different behaviors for different table calls
+      mockSupabaseClient.from.mockImplementation((table: string) => {
+        if (table === 'links') {
+          return { select: mockSelectForLink }
+        } else if (table === 'properties') {
+          return { select: mockSelectForProperties }
+        }
+        throw new Error(`Unexpected table: ${table}`)
       })
 
       // ACT
@@ -369,59 +415,78 @@ describe('LinkService', () => {
         }
       ]
 
-      mockOrder.mockResolvedValue({
+      // Setup mock chain for: .from('links').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to)
+      const mockRange = jest.fn().mockResolvedValue({
         data: mockLinks,
-        error: null
+        error: null,
+        count: mockLinks.length
       })
+      const mockOrder = jest.fn().mockReturnValue({ range: mockRange })
+      const mockSelect = jest.fn().mockReturnValue({ order: mockOrder })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
 
       // ACT
       const result = await LinkService.getAgentLinks()
 
       // ASSERT
-      expect(result).toHaveLength(2)
-      expect(result[0].code).toBe('ABC12345')
-      expect(result[0].name).toBe('Waterfront Collection')
-      expect(result[1].code).toBe('XYZ98765')
-      expect(result[1].name).toBe('Downtown Properties')
-      expect(mockFrom).toHaveBeenCalledWith('links')
-      expect(mockSelect).toHaveBeenCalledWith('*')
+      expect(result.data).toHaveLength(2)
+      expect(result.data[0].code).toBe('ABC12345')
+      expect(result.data[0].name).toBe('Waterfront Collection')
+      expect(result.data[1].code).toBe('XYZ98765')
+      expect(result.data[1].name).toBe('Downtown Properties')
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('links')
+      expect(mockSelect).toHaveBeenCalledWith('*', { count: 'exact' })
       expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false })
     })
 
     it('should return empty array when no links exist', async () => {
       // ARRANGE
-      mockOrder.mockResolvedValue({
+      const mockRange = jest.fn().mockResolvedValue({
         data: [],
-        error: null
+        error: null,
+        count: 0
       })
+      const mockOrder = jest.fn().mockReturnValue({ range: mockRange })
+      const mockSelect = jest.fn().mockReturnValue({ order: mockOrder })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
 
       // ACT
       const result = await LinkService.getAgentLinks()
 
       // ASSERT
-      expect(result).toEqual([])
+      expect(result.data).toEqual([])
+      expect(result.count).toBe(0)
     })
 
     it('should handle null data gracefully', async () => {
       // ARRANGE
-      mockOrder.mockResolvedValue({
+      const mockRange = jest.fn().mockResolvedValue({
         data: null,
-        error: null
+        error: null,
+        count: 0
       })
+      const mockOrder = jest.fn().mockReturnValue({ range: mockRange })
+      const mockSelect = jest.fn().mockReturnValue({ order: mockOrder })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
 
       // ACT
       const result = await LinkService.getAgentLinks()
 
       // ASSERT
-      expect(result).toEqual([])
+      expect(result.data).toEqual([])
+      expect(result.count).toBe(0)
     })
 
     it('should throw error when database query fails', async () => {
       // ARRANGE
-      mockOrder.mockResolvedValue({
+      const mockRange = jest.fn().mockResolvedValue({
         data: null,
-        error: { message: 'Database connection failed' }
+        error: { message: 'Database connection failed' },
+        count: null
       })
+      const mockOrder = jest.fn().mockReturnValue({ range: mockRange })
+      const mockSelect = jest.fn().mockReturnValue({ order: mockOrder })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
 
       // ACT & ASSERT
       await expect(LinkService.getAgentLinks())
@@ -450,20 +515,339 @@ describe('LinkService', () => {
         }
       ]
 
-      mockOrder.mockResolvedValue({
+      const mockRange = jest.fn().mockResolvedValue({
         data: mockLinks,
-        error: null
+        error: null,
+        count: mockLinks.length
       })
+      const mockOrder = jest.fn().mockReturnValue({ range: mockRange })
+      const mockSelect = jest.fn().mockReturnValue({ order: mockOrder })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
 
       // ACT
       const result = await LinkService.getAgentLinks()
 
       // ASSERT
-      expect(result).toHaveLength(2)
-      expect(result[0].name).toBe('Newer Collection') // Should be first (newer)
-      expect(result[1].name).toBe('Older Collection') // Should be second (older)
+      expect(result.data).toHaveLength(2)
+      expect(result.data[0].name).toBe('Newer Collection') // Should be first (newer)
+      expect(result.data[1].name).toBe('Older Collection') // Should be second (older)
       expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false })
     })
+  })
+
+  describe('getAgentLinksSimple', () => {
+    it('should retrieve simple links without properties', async () => {
+      // ARRANGE
+      const mockLinks = [
+        {
+          id: 'link-1',
+          code: 'ABC12345',
+          name: 'Waterfront Collection',
+          property_ids: JSON.stringify(['uuid-1', 'uuid-2']),
+          created_at: '2023-01-01T00:00:00.000Z'
+        },
+        {
+          id: 'link-2',
+          code: 'XYZ98765',
+          name: 'Downtown Properties',
+          property_ids: JSON.stringify(['uuid-3', 'uuid-4']),
+          created_at: '2023-01-02T00:00:00.000Z'
+        }
+      ]
+
+      // Setup mock chain for: .from('links').select('id, code, name, created_at, property_ids').order('created_at', { ascending: false })
+      const mockOrder = jest.fn().mockResolvedValue({
+        data: mockLinks,
+        error: null
+      })
+      const mockSelect = jest.fn().mockReturnValue({ order: mockOrder })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
+
+      // ACT
+      const result = await LinkService.getAgentLinksSimple()
+
+      // ASSERT
+      expect(result).toHaveLength(2)
+      expect(result[0].code).toBe('ABC12345')
+      expect(result[0].name).toBe('Waterfront Collection')
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('links')
+      expect(mockSelect).toHaveBeenCalledWith('id, code, name, created_at, property_ids')
+      expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false })
+    })
+
+    it('should handle empty result gracefully', async () => {
+      // ARRANGE
+      const mockOrder = jest.fn().mockResolvedValue({
+        data: [],
+        error: null
+      })
+      const mockSelect = jest.fn().mockReturnValue({ order: mockOrder })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
+
+      // ACT
+      const result = await LinkService.getAgentLinksSimple()
+
+      // ASSERT
+      expect(result).toEqual([])
+    })
+
+    it('should throw error when query fails', async () => {
+      // ARRANGE
+      const mockOrder = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'Database error' }
+      })
+      const mockSelect = jest.fn().mockReturnValue({ order: mockOrder })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
+
+      // ACT & ASSERT
+      await expect(LinkService.getAgentLinksSimple())
+        .rejects
+        .toThrow('Failed to fetch links: Database error')
+    })
+  })
+
+  describe('deleteLink', () => {
+    it('should delete link successfully', async () => {
+      // ARRANGE
+      const linkCode = 'ABC12345'
+
+      // Setup mock chain for: .from('links').delete().eq('code', code)
+      const mockEq = jest.fn().mockResolvedValue({
+        error: null
+      })
+      const mockDelete = jest.fn().mockReturnValue({ eq: mockEq })
+      mockSupabaseClient.from.mockReturnValue({ delete: mockDelete })
+
+      // ACT
+      await LinkService.deleteLink(linkCode)
+
+      // ASSERT
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('links')
+      expect(mockEq).toHaveBeenCalledWith('code', linkCode)
+    })
+
+    it('should throw error when delete fails', async () => {
+      // ARRANGE
+      const linkCode = 'ABC12345'
+
+      const mockEq = jest.fn().mockResolvedValue({
+        error: { message: 'Delete failed' }
+      })
+      const mockDelete = jest.fn().mockReturnValue({ eq: mockEq })
+      mockSupabaseClient.from.mockReturnValue({ delete: mockDelete })
+
+      // ACT & ASSERT
+      await expect(LinkService.deleteLink(linkCode))
+        .rejects
+        .toThrow('Failed to delete link: Delete failed')
+    })
+  })
+
+  describe('updateLink', () => {
+    it('should update link name and property IDs', async () => {
+      // ARRANGE
+      const linkCode = 'ABC12345'
+      const updates = {
+        name: 'Updated Collection',
+        property_ids: ['uuid-1', 'uuid-3']
+      }
+
+      const mockUpdatedLink = {
+        id: 'link-uuid',
+        code: linkCode,
+        name: updates.name,
+        property_ids: JSON.stringify(updates.property_ids),
+        created_at: new Date().toISOString(),
+        expires_at: null
+      }
+
+      // Setup mock chain for: .from('links').update().eq('code', code).select().single()
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: mockUpdatedLink,
+        error: null
+      })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockEq = jest.fn().mockReturnValue({ select: mockSelect })
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq })
+      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate })
+
+      // ACT
+      const result = await LinkService.updateLink(linkCode, updates)
+
+      // ASSERT
+      expect(result).toBeDefined()
+      expect(result.name).toBe(updates.name)
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('links')
+      expect(mockUpdate).toHaveBeenCalledWith({
+        name: updates.name,
+        property_ids: JSON.stringify(updates.property_ids)
+      })
+      expect(mockEq).toHaveBeenCalledWith('code', linkCode)
+    })
+
+    it('should update only name when property_ids not provided', async () => {
+      // ARRANGE
+      const linkCode = 'ABC12345'
+      const updates = { name: 'New Name Only' }
+
+      const mockUpdatedLink = {
+        id: 'link-uuid',
+        code: linkCode,
+        name: updates.name,
+        property_ids: JSON.stringify(['uuid-1']),
+        created_at: new Date().toISOString(),
+        expires_at: null
+      }
+
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: mockUpdatedLink,
+        error: null
+      })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockEq = jest.fn().mockReturnValue({ select: mockSelect })
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq })
+      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate })
+
+      // ACT
+      const result = await LinkService.updateLink(linkCode, updates)
+
+      // ASSERT
+      expect(result.name).toBe(updates.name)
+      expect(mockUpdate).toHaveBeenCalledWith({ name: updates.name })
+    })
+
+    it('should throw error when update fails', async () => {
+      // ARRANGE
+      const linkCode = 'ABC12345'
+      const updates = { name: 'Failed Update' }
+
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'Update failed' }
+      })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockEq = jest.fn().mockReturnValue({ select: mockSelect })
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq })
+      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate })
+
+      // ACT & ASSERT
+      await expect(LinkService.updateLink(linkCode, updates))
+        .rejects
+        .toThrow('Failed to update link: Update failed')
+    })
+  })
+
+  describe('getLinkAnalytics', () => {
+    // Note: These tests are simplified due to dynamic import complexity in Jest
+    // The actual method handles analytics service failure gracefully with fallback values
+    it('should have getLinkAnalytics method available', () => {
+      // ASSERT
+      expect(typeof LinkService.getLinkAnalytics).toBe('function')
+    })
+
+    it('should return fallback analytics when service unavailable', async () => {
+      // ARRANGE
+      const linkCode = 'NONEXISTENT'
+      
+      // Mock console.error to avoid test output noise
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      // ACT - This will fail to import the analytics service and use fallback
+      const result = await LinkService.getLinkAnalytics(linkCode)
+
+      // ASSERT - Should return fallback values
+      expect(result).toEqual({
+        totalViews: 0,
+        uniqueViews: 0,
+        totalSwipes: 0,
+        totalLikes: 0,
+        totalDislikes: 0,
+        recentActivity: []
+      })
+
+      // Cleanup
+      consoleSpy.mockRestore()
+    })
+  })
+
+  it('should retrieve link with properties regardless of status field', async () => {
+    // ARRANGE - This test verifies the fix for the user's issue where:
+    // Links are now successfully retrieved even if properties don't have status='active'
+    const linkCode = 'DASH123'
+    
+    const mockLink = {
+      id: 'dashboard-link',
+      code: linkCode,
+      name: 'Dashboard Collection',
+      property_ids: JSON.stringify(['prop-1', 'prop-2']),
+      created_at: '2024-01-01T00:00:00Z',
+      expires_at: null
+    }
+
+    const mockProperties = [
+      {
+        id: 'prop-1',
+        address: '123 Dashboard St',
+        price: 500000,
+        bedrooms: 2,
+        bathrooms: 2.0,
+        area_sqft: 1200,
+        // Note: No explicit status field - this would previously cause issues
+        created_at: '2024-01-01T00:00:00.000Z',
+        updated_at: '2024-01-01T00:00:00.000Z'
+      },
+      {
+        id: 'prop-2',
+        address: '456 Dashboard Ave',
+        price: 750000,
+        bedrooms: 3,
+        bathrooms: 2.5,
+        area_sqft: 1800,
+        status: null, // Explicitly null status
+        created_at: '2024-01-01T00:00:00.000Z',
+        updated_at: '2024-01-01T00:00:00.000Z'
+      }
+    ]
+
+    // Setup mock chain for successful link retrieval
+    const mockSingleForLink = jest.fn().mockResolvedValue({
+      data: mockLink,
+      error: null
+    })
+    const mockEqForLink = jest.fn().mockReturnValue({ single: mockSingleForLink })
+    const mockSelectForLink = jest.fn().mockReturnValue({ eq: mockEqForLink })
+
+    // Setup mock chain for properties query - now returns all properties regardless of status
+    const mockInForProperties = jest.fn().mockResolvedValue({
+      data: mockProperties,
+      error: null
+    })
+    const mockSelectForProperties = jest.fn().mockReturnValue({ in: mockInForProperties })
+
+    // Mock different behaviors for different table calls
+    mockSupabaseClient.from.mockImplementation((table: string) => {
+      if (table === 'links') {
+        return { select: mockSelectForLink }
+      } else if (table === 'properties') {
+        return { select: mockSelectForProperties }
+      }
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    // ACT
+    const result = await LinkService.getLink(linkCode)
+
+    // ASSERT - The fix! Link now properly includes all properties
+    expect(result).toBeDefined()
+    expect(result.code).toBe(linkCode)
+    expect(result.name).toBe('Dashboard Collection')
+    expect(result.properties).toHaveLength(2) // Properties are now included!
+    expect(result.properties[0].address).toBe('123 Dashboard St')
+    expect(result.properties[1].address).toBe('456 Dashboard Ave')
+    
+    // Verify no status filter was applied
+    expect(mockInForProperties).toHaveBeenCalledWith('id', ['prop-1', 'prop-2'])
   })
 
   describe('Edge Cases and Error Handling', () => {
@@ -512,10 +896,14 @@ describe('LinkService', () => {
         expires_at: null
       }
 
-      mockSingle.mockResolvedValue({
+      // Setup mock chain for insert operation
+      const mockSingle = jest.fn().mockResolvedValue({
         data: mockLinkData,
         error: null
       })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockInsert = jest.fn().mockReturnValue({ select: mockSelect })
+      mockSupabaseClient.from.mockReturnValue({ insert: mockInsert })
 
       // ACT
       const result = await LinkService.createLink(propertyIds, veryLongName)
@@ -538,10 +926,14 @@ describe('LinkService', () => {
         expires_at: null
       }
 
-      mockSingle.mockResolvedValue({
+      // Setup mock chain for insert operation
+      const mockSingle = jest.fn().mockResolvedValue({
         data: mockLinkData,
         error: null
       })
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockInsert = jest.fn().mockReturnValue({ select: mockSelect })
+      mockSupabaseClient.from.mockReturnValue({ insert: mockInsert })
 
       // ACT
       const result = await LinkService.createLink(propertyIds, specialName)

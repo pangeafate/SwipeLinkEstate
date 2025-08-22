@@ -1,0 +1,557 @@
+import React, { useState, useCallback, useMemo } from 'react'
+import { Property, BucketType } from './types'
+
+interface BucketManagerProps {
+  properties: Property[]
+  buckets: Record<BucketType | 'all', string[]>
+  bookedVisits: Array<{ propertyId: string; date: string; time: string }>
+  activeBucket?: BucketType | 'all'
+  onBucketChange: (bucket: BucketType | 'all', propertyId?: string) => void
+  onPropertySelect: (property: Property) => void
+  onBookVisit: (property: Property) => void
+  onClearBucket: (bucket: BucketType) => void
+  loading?: boolean
+}
+
+interface BucketStats {
+  averagePrice: number
+  propertyTypes: Record<string, number>
+  locations: string[]
+  commonFeatures: Record<string, number>
+}
+
+const BucketManager: React.FC<BucketManagerProps> = ({
+  properties,
+  buckets,
+  bookedVisits,
+  activeBucket = 'all',
+  onBucketChange,
+  onPropertySelect,
+  onBookVisit,
+  onClearBucket,
+  loading = false
+}) => {
+  const [showClearConfirmation, setShowClearConfirmation] = useState<string | null>(null)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [sortBy, setSortBy] = useState<'price' | 'date' | 'location'>('date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [dragActive, setDragActive] = useState(false)
+  const [dragging, setDragging] = useState<string | null>(null)
+
+  // Get properties for active bucket
+  const activeProperties = useMemo(() => {
+    if (activeBucket === 'all') {
+      return properties
+    }
+    const propertyIds = buckets[activeBucket as BucketType] || []
+    return properties.filter(p => propertyIds.includes(p.id))
+  }, [properties, buckets, activeBucket])
+
+  // Calculate bucket statistics
+  const bucketStats = useMemo((): BucketStats => {
+    if (!activeProperties.length) {
+      return {
+        averagePrice: 0,
+        propertyTypes: {},
+        locations: [],
+        commonFeatures: {}
+      }
+    }
+
+    const averagePrice = activeProperties.reduce((sum, p) => sum + p.price, 0) / activeProperties.length
+    
+    const propertyTypes = activeProperties.reduce((acc, p) => {
+      acc[p.property_type] = (acc[p.property_type] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    const locations = activeProperties.map(p => p.address.split(',')[0]).slice(0, 5)
+    
+    const commonFeatures = activeProperties.reduce((acc, p) => {
+      acc[`${p.bedrooms} bedrooms`] = (acc[`${p.bedrooms} bedrooms`] || 0) + 1
+      acc[`${p.bathrooms} bathrooms`] = (acc[`${p.bathrooms} bathrooms`] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    return {
+      averagePrice,
+      propertyTypes,
+      locations,
+      commonFeatures
+    }
+  }, [activeProperties])
+
+  // Sort properties
+  const sortedProperties = useMemo(() => {
+    const sorted = [...activeProperties].sort((a, b) => {
+      switch (sortBy) {
+        case 'price':
+          return sortOrder === 'desc' ? b.price - a.price : a.price - b.price
+        case 'location':
+          return sortOrder === 'desc' 
+            ? b.address.localeCompare(a.address)
+            : a.address.localeCompare(b.address)
+        case 'date':
+        default:
+          // For now, sort by ID as proxy for date added
+          return sortOrder === 'desc' 
+            ? b.id.localeCompare(a.id)
+            : a.id.localeCompare(b.id)
+      }
+    })
+    return sorted
+  }, [activeProperties, sortBy, sortOrder])
+
+  // Handle bucket tab click
+  const handleBucketClick = useCallback((bucket: BucketType | 'all') => {
+    onBucketChange(bucket)
+  }, [onBucketChange])
+
+  // Handle property card click
+  const handlePropertyClick = useCallback((property: Property) => {
+    onPropertySelect(property)
+  }, [onPropertySelect])
+
+  // Handle book visit
+  const handleBookVisit = useCallback((property: Property) => {
+    onBookVisit(property)
+  }, [onBookVisit])
+
+  // Handle clear bucket
+  const handleClearBucket = useCallback((bucket: BucketType) => {
+    setShowClearConfirmation(null)
+    onClearBucket(bucket)
+  }, [onClearBucket])
+
+  // Handle sort change
+  const handleSortChange = useCallback((value: string) => {
+    const [sortType, order] = value.split('-')
+    setSortBy(sortType as 'price' | 'date' | 'location')
+    setSortOrder(order as 'asc' | 'desc')
+  }, [])
+
+  // Handle drag start
+  const handleDragStart = useCallback((propertyId: string) => {
+    setDragging(propertyId)
+    setDragActive(true)
+  }, [])
+
+  // Handle drag end
+  const handleDragEnd = useCallback(() => {
+    setDragging(null)
+    setDragActive(false)
+  }, [])
+
+  // Handle drop on bucket
+  const handleDropOnBucket = useCallback((bucket: BucketType, propertyId: string) => {
+    onBucketChange(bucket, propertyId)
+    setDragging(null)
+    setDragActive(false)
+  }, [onBucketChange])
+
+  // Handle drag and drop
+  const handleDragAndDrop = useCallback((sourceElement: HTMLElement, targetElement: HTMLElement) => {
+    const propertyId = sourceElement.getAttribute('data-property-id')
+    const targetBucket = targetElement.getAttribute('data-bucket')
+    
+    if (propertyId && targetBucket) {
+      handleDropOnBucket(targetBucket as BucketType, propertyId)
+    }
+  }, [handleDropOnBucket])
+
+  // Handle print/download
+  const handleDownload = useCallback(() => {
+    window.print()
+  }, [])
+
+  // Get bucket count
+  const getBucketCount = (bucket: BucketType | 'all') => {
+    if (bucket === 'all') return properties.length
+    return buckets[bucket]?.length || 0
+  }
+
+  // Check if property has booked visit
+  const hasBookedVisit = (propertyId: string) => {
+    return bookedVisits.some(visit => visit.propertyId === propertyId)
+  }
+
+  if (loading) {
+    return (
+      <div data-testid="bucket-manager" className="bucket-manager">
+        <div data-testid="bucket-loading-skeleton" className="loading-skeleton">
+          <div className="skeleton-nav">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="skeleton-tab" />
+            ))}
+          </div>
+          <div className="skeleton-content">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="skeleton-card" />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div 
+      data-testid="bucket-manager" 
+      className="bucket-manager"
+      role="region"
+      aria-label="Property bucket management"
+    >
+      {/* Bucket Navigation */}
+      <div 
+        data-testid="bucket-nav" 
+        className={`bucket-nav ${dragActive ? 'drag-active' : ''}`}
+        role="tablist"
+      >
+        <button
+          data-testid="bucket-tab-love"
+          className={`bucket-tab ${activeBucket === 'love' ? 'bucket-tab-active' : ''} ${getBucketCount('love') > 0 ? 'has-properties' : ''}`}
+          onClick={() => handleBucketClick('love')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleBucketClick('love')
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault()
+              document.querySelector('[data-testid="bucket-tab-maybe"]')?.focus()
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault()
+              document.querySelector('[data-testid="bucket-tab-all"]')?.focus()
+            }
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault()
+            if (dragging) {
+              handleDropOnBucket('love', dragging)
+            }
+          }}
+          disabled={loading}
+          role="tab"
+          aria-selected={activeBucket === 'love'}
+          data-bucket="love"
+        >
+          ❤️ Liked ({getBucketCount('love')})
+        </button>
+        
+        <button
+          data-testid="bucket-tab-maybe"
+          className={`bucket-tab ${activeBucket === 'maybe' ? 'bucket-tab-active' : ''} ${getBucketCount('maybe') > 0 ? 'has-properties' : ''}`}
+          onClick={() => handleBucketClick('maybe')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleBucketClick('maybe')
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault()
+              document.querySelector('[data-testid="bucket-tab-pass"]')?.focus()
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault()
+              document.querySelector('[data-testid="bucket-tab-love"]')?.focus()
+            }
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault()
+            if (dragging) {
+              handleDropOnBucket('maybe', dragging)
+            }
+          }}
+          disabled={loading}
+          role="tab"
+          aria-selected={activeBucket === 'maybe'}
+          data-bucket="maybe"
+        >
+          🔖 Considering ({getBucketCount('maybe')})
+        </button>
+        
+        <button
+          data-testid="bucket-tab-pass"
+          className={`bucket-tab ${activeBucket === 'pass' ? 'bucket-tab-active' : ''} ${getBucketCount('pass') > 0 ? 'has-properties' : ''}`}
+          onClick={() => handleBucketClick('pass')}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault()
+            if (dragging) {
+              handleDropOnBucket('pass', dragging)
+            }
+          }}
+          disabled={loading}
+          role="tab"
+          aria-selected={activeBucket === 'pass'}
+        >
+          ❌ Disliked ({getBucketCount('pass')})
+        </button>
+        
+        <button
+          data-testid="bucket-tab-all"
+          className={`bucket-tab ${activeBucket === 'all' ? 'bucket-tab-active' : ''}`}
+          onClick={() => handleBucketClick('all')}
+          disabled={loading}
+          role="tab"
+          aria-selected={activeBucket === 'all'}
+        >
+          📋 All Properties ({getBucketCount('all')})
+        </button>
+      </div>
+
+      {/* Bucket Statistics */}
+      {activeProperties.length > 0 && activeBucket !== 'all' && (
+        <div data-testid="bucket-stats" className="bucket-stats">
+          <div data-testid="bucket-stats-avg-price" className="stat-item">
+            <span className="stat-label">Average Price:</span>
+            <span className="stat-value">${bucketStats.averagePrice.toLocaleString()}</span>
+          </div>
+          
+          <div data-testid="bucket-stats-property-types" className="stat-item">
+            <span className="stat-label">Property Types:</span>
+            <span className="stat-value">
+              {Object.entries(bucketStats.propertyTypes).map(([type, count]) => (
+                <span key={type}>{type} ({count}) </span>
+              ))}
+            </span>
+          </div>
+          
+          <div data-testid="bucket-stats-locations" className="stat-item">
+            <span className="stat-label">Locations:</span>
+            <span className="stat-value">
+              {bucketStats.locations.join(', ')}
+            </span>
+          </div>
+          
+          <div data-testid="bucket-stats-features" className="stat-item">
+            <span className="stat-label">Common Features:</span>
+            <span className="stat-value">
+              {Object.entries(bucketStats.commonFeatures)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3)
+                .map(([feature, count]) => (
+                  <span key={feature}>{feature} ({count}) </span>
+                ))}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Sort and Filter Options */}
+      <div className="bucket-controls">
+        <div data-testid="bucket-sort-options" className="sort-options">
+          <label htmlFor="bucket-sort-select">Sort by:</label>
+          <select
+            id="bucket-sort-select"
+            data-testid="bucket-sort-select"
+            value={`${sortBy}-${sortOrder}`}
+            onChange={(e) => handleSortChange(e.target.value)}
+          >
+            <option value="date-desc">Date Added (Newest)</option>
+            <option value="date-asc">Date Added (Oldest)</option>
+            <option value="price-desc">Price (High to Low)</option>
+            <option value="price-asc">Price (Low to High)</option>
+            <option value="location-asc">Location (A-Z)</option>
+            <option value="location-desc">Location (Z-A)</option>
+          </select>
+        </div>
+
+        <div data-testid="bucket-filter-options" className="filter-options">
+          <select data-testid="filter-property-type">
+            <option value="">All Property Types</option>
+            <option value="house">House</option>
+            <option value="condo">Condo</option>
+            <option value="townhouse">Townhouse</option>
+          </select>
+          
+          <select data-testid="filter-price-range">
+            <option value="">All Price Ranges</option>
+            <option value="0-500000">Under $500K</option>
+            <option value="500000-1000000">$500K - $1M</option>
+            <option value="1000000-">Over $1M</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Property Grid or Empty State */}
+      {sortedProperties.length > 0 ? (
+        <div 
+          data-testid="bucket-property-grid" 
+          className={`property-grid ${sortedProperties.length > 50 ? 'virtualized' : ''}`}
+        >
+          {sortedProperties.length > 50 && (
+            <div data-testid="bucket-virtual-list" className="virtual-list">
+              {/* Virtual list implementation would go here */}
+            </div>
+          )}
+          
+          {sortedProperties.slice(0, sortedProperties.length > 50 ? 15 : sortedProperties.length).map((property) => (
+            <div
+              key={property.id}
+              data-testid={`bucket-property-card-${property.id}`}
+              data-property-id={property.id}
+              className={`property-card bucket-assigned-${
+                Object.entries(buckets).find(([, ids]) => ids.includes(property.id))?.[0] || 'none'
+              } ${hasBookedVisit(property.id) ? 'visit-booked' : ''} ${dragging === property.id ? 'dragging' : ''}`}
+              onClick={() => handlePropertyClick(property)}
+              draggable
+              onDragStart={() => handleDragStart(property.id)}
+              onDragEnd={handleDragEnd}
+            >
+              <img 
+                src={property.images[0]} 
+                alt={property.address}
+                loading="lazy"
+                className="property-image"
+              />
+              
+              <div className="property-info">
+                <h3 className="property-address">{property.address}</h3>
+                <p className="property-price">${property.price.toLocaleString()}</p>
+                <p className="property-details">
+                  {property.bedrooms} bed • {property.bathrooms} bath • {property.area_sqft.toLocaleString()} sqft
+                </p>
+              </div>
+
+              {/* Visit Booking Button for Liked Properties */}
+              {buckets.love?.includes(property.id) && (
+                <button
+                  data-testid={`book-visit-${property.id}`}
+                  className="book-visit-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleBookVisit(property)
+                  }}
+                  aria-label={`Book visit for ${property.address}`}
+                >
+                  {hasBookedVisit(property.id) ? '✅ Visit Booked' : '📅 Book Visit'}
+                </button>
+              )}
+
+              {hasBookedVisit(property.id) && (
+                <div className="visit-status">
+                  Visit Booked
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div data-testid="bucket-empty-state" className="empty-state">
+          <div className="empty-state-icon">
+            {activeBucket === 'all' && properties.length === 0 
+              ? '🏠' 
+              : activeBucket === 'love' ? '❤️' 
+              : activeBucket === 'maybe' ? '🔖' 
+              : '❌'
+            }
+          </div>
+          <h3>
+            {activeBucket === 'all' && properties.length === 0
+              ? 'No properties available'
+              : 'No properties in this bucket'
+            }
+          </h3>
+          <p>
+            {activeBucket === 'all' && properties.length === 0
+              ? 'Properties will appear here when they are added to the collection.'
+              : 'Browse properties to add them to this bucket.'
+            }
+          </p>
+        </div>
+      )}
+
+      {/* Bucket Actions */}
+      {activeProperties.length > 0 && activeBucket !== 'all' && (
+        <div data-testid="bucket-actions" className="bucket-actions">
+          <button
+            data-testid="bucket-action-download"
+            className="action-btn secondary"
+            onClick={handleDownload}
+          >
+            📄 Download Summary
+          </button>
+          
+          <button
+            data-testid="bucket-action-share"
+            className="action-btn secondary"
+            onClick={() => setShowShareModal(true)}
+          >
+            📤 Share with Agent
+          </button>
+          
+          <button
+            data-testid="bucket-action-clear"
+            className="action-btn danger"
+            onClick={() => setShowClearConfirmation(activeBucket as BucketType)}
+          >
+            🗑️ Clear Bucket
+          </button>
+        </div>
+      )}
+
+      {/* Clear Bucket Confirmation */}
+      {showClearConfirmation && (
+        <div data-testid="clear-bucket-confirmation" className="confirmation-modal">
+          <div className="modal-content">
+            <h3>Clear {showClearConfirmation} bucket?</h3>
+            <p>This will remove all properties from this bucket. This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button
+                data-testid="confirm-clear-bucket"
+                className="btn danger"
+                onClick={() => handleClearBucket(showClearConfirmation as BucketType)}
+              >
+                Yes, Clear Bucket
+              </button>
+              <button
+                className="btn secondary"
+                onClick={() => setShowClearConfirmation(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div data-testid="share-bucket-modal" className="share-modal">
+          <div className="modal-content">
+            <h3>Share with Agent</h3>
+            <p>Your selected properties will be shared with your agent for follow-up.</p>
+            <div className="modal-actions">
+              <button
+                className="btn primary"
+                onClick={() => setShowShareModal(false)}
+              >
+                Share Properties
+              </button>
+              <button
+                className="btn secondary"
+                onClick={() => setShowShareModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Screen Reader Live Region */}
+      <div 
+        data-testid="bucket-live-region"
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {activeBucket !== 'all' && 
+          `Now viewing ${activeBucket === 'love' ? 'Liked' : activeBucket === 'maybe' ? 'Considering' : 'Disliked'} bucket with ${activeProperties.length} properties`
+        }
+      </div>
+    </div>
+  )
+}
+
+export default BucketManager

@@ -58,7 +58,17 @@ property/
 ├── types.ts              # Re-exports from lib/supabase/types.ts
 ├── property.service.ts   # Re-exports from lib/supabase/property.service.ts
 ├── components/           # UI components
-│   └── PropertyCard.tsx  # Generic property card component
+│   ├── PropertyCard.tsx      # Generic property card component
+│   ├── PropertyForm.tsx      # Original form (380 lines - DEPRECATED)
+│   ├── PropertyFormV2.tsx    # New compliant form (185 lines) ✅
+│   ├── FormInput.tsx         # Reusable form input (48 lines) ✅
+│   ├── hooks/
+│   │   └── usePropertyValidation.ts  # Validation hook (146 lines) ✅
+│   └── __tests__/           # Component tests
+│       ├── PropertyForm.test.tsx
+│       ├── PropertyFormV2.test.tsx
+│       ├── FormInput.test.tsx
+│       └── usePropertyValidation.test.tsx
 └── __tests__/           # Module tests
 ```
 
@@ -108,3 +118,74 @@ import PropertyCard from '@/components/agent/PropertyCard'
 - Debounced search filtering
 - Cached property status updates
 - JSON field handling for features and images arrays
+
+## Refactored Components (2025-08-19)
+
+### PropertyFormV2 Architecture
+Following TDD methodology, the original 380-line PropertyForm.tsx was refactored into:
+
+#### PropertyFormV2.tsx (185 lines) ✅
+**Purpose**: Main form orchestrator component
+**Features**:
+- Integrates FormInput and usePropertyValidation
+- Handles form submission and error states
+- Maintains all original functionality
+- Complies with 200-line limit
+
+```tsx
+import PropertyFormV2 from '@/components/property/components/PropertyFormV2'
+
+<PropertyFormV2 
+  onPropertyCreated={handlePropertyCreated}
+  onCancel={handleCancel}
+/>
+```
+
+#### FormInput.tsx (48 lines) ✅
+**Purpose**: Reusable form input component with validation
+**Features**:
+- Consistent styling and behavior
+- Error state display
+- Required field indicators
+- Accessibility support
+
+```tsx
+import FormInput from '@/components/property/components/FormInput'
+
+<FormInput
+  id="address"
+  label="Property Address"
+  value={formData.address}
+  onChange={handleInputChange}
+  error={errors.address}
+  required={true}
+/>
+```
+
+#### usePropertyValidation.ts (146 lines) ✅
+**Purpose**: Custom hook for form validation business logic
+**Features**:
+- Field-specific validation rules
+- Real-time validation feedback
+- Centralized error management
+- Reusable across forms
+
+```tsx
+import usePropertyValidation from '@/components/property/components/hooks/usePropertyValidation'
+
+const { errors, validateField, validateAll, clearErrors } = usePropertyValidation()
+```
+
+### Migration Strategy
+- ✅ **PropertyFormV2**: Use for all new property creation
+- ⚠️ **PropertyForm**: Original deprecated, remove after migration complete
+- ✅ **FormInput**: Reuse for other form implementations
+- ✅ **usePropertyValidation**: Extend for other property-related forms
+
+### Testing Coverage
+All refactored components include comprehensive test suites:
+- Unit tests for individual components
+- Integration tests for form workflows
+- Validation logic testing
+- Error state handling
+- Accessibility compliance testing

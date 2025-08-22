@@ -81,7 +81,7 @@ describe('PropertiesPage', () => {
   it('should show loading state initially and then display properties', async () => {
     // Use a slow mock to capture loading state
     ;(PropertyService.getAllProperties as jest.Mock).mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve(mockProperties), 100))
+      () => new Promise(resolve => setTimeout(() => resolve(mockProperties), 10)) // Reduced delay for faster tests
     )
 
     // ACT
@@ -94,7 +94,7 @@ describe('PropertiesPage', () => {
     // ASSERT - Properties loaded after loading completes
     await waitFor(() => {
       expect(screen.getByText('2 Properties Available')).toBeInTheDocument()
-    }, { timeout: 3000 })
+    }) // Removed excessive timeout - use default
 
     expect(screen.getByText('123 Ocean Drive')).toBeInTheDocument()
     expect(screen.getByText('456 Beach Ave')).toBeInTheDocument()

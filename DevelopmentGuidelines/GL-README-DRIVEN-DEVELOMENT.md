@@ -3,7 +3,7 @@
 ## CORE RULES - ALWAYS FOLLOW
 ALWAYS: when you create a code component - there should be a detailed README file in the same folder. It should be named as “name of the component”+”Readme” and should be placed in the folder with component. For example “PropertyCard-README.md” it should describe in plain and simple english the logic and code in the component (for exmple PropertyCard.tsx) and illustrate the place of this component in the architecture and its functions. Use flowcharts and diagrams where appropriate. Don't write code in the README files, just plain english and diagrams. ALWAYS: update README files when the code functionality changes. 
 
-1. **NEVER create files > 200 lines** - Split into smaller modules (TypeScript files should be even smaller)
+1. **NEVER create files > 200 lines** - Split into smaller modules (TypeScript files should be even smaller), markdown and readme files can be of any length
 2. **NEVER mix concerns** - One file, one purpose (e.g., don't mix Supabase queries with UI logic)
 3. **ALWAYS update README** - Document every new feature/module
 4. **ALWAYS maintain module boundaries** - Use the defined public APIs
@@ -38,7 +38,7 @@ real-estate-platform/
 │   │   ├── index.ts          # Public exports
 │   │   └── [components]
 │   ├── link/                  # Link module components
-│   ├── swipe/                 # Client interface components
+│   ├── client/                # Client link interface components
 │   └── analytics/             # Analytics components
 ├── lib/
 │   ├── supabase/             # Database layer
@@ -59,7 +59,7 @@ real-estate-platform/
 │            (Next.js Pages & Routes)              │
 ├─────────────────────────────────────────────────┤
 │                COMPONENT LAYER                   │
-│     Property │ Link │ Swipe │ Analytics         │
+│     Property │ Link │ Client │ Analytics        │
 ├─────────────────────────────────────────────────┤
 │                SERVICE LAYER                     │
 │          Business Logic & Data Access            │
@@ -85,7 +85,7 @@ real-estate-platform/
         │                  │ Contains          │ Creates
         │                  ▼                   │
 ┌───────┴──────┐   ┌──────────────┐   ┌───────┴──────┐
-│   Property   │   │    Swipe     │   │    Agent     │
+│   Property   │   │   Client     │   │    Agent     │
 │    Module    │◄──│   Module     │   │  Dashboard   │
 └──────────────┘   └──────────────┘   └──────────────┘
      Provides           Uses              Manages
@@ -217,28 +217,33 @@ Key Rules:
 - Track every link interaction
 ```
 
-### Client Interface (Swipe) Module
+### Client Link Interface Module
 
 ```
 Structure:
-├── SwipeService
+├── ClientLinkService
 │   ├── Session management
-│   ├── Swipe handling
-│   └── Bucket operations
-├── SwipeComponents
-│   ├── SwipeContainer
-│   ├── PropertySwipeCard
-│   ├── BucketBar
-│   └── SwipeGestures
-└── SwipeTypes
-    ├── SwipeDirection enum
-    ├── SwipeSession interface
+│   ├── Carousel navigation
+│   ├── Bucket operations
+│   └── Visit booking
+├── ClientComponents
+│   ├── PropertyCarousel
+│   ├── PropertyCard
+│   ├── PropertyModal
+│   ├── BucketManager
+│   ├── VisitBooking
+│   └── CollectionOverview
+└── ClientTypes
+    ├── NavigationTypes
+    ├── ClientSession interface
     └── Bucket types
 
 Critical Performance:
-- Preload next 2 cards
-- Gesture response < 16ms
+- Preload next 2-3 properties
+- Navigation response < 100ms
+- Modal transitions < 250ms
 - Optimistic UI updates
+- Progressive image loading
 - No blocking operations
 ```
 
@@ -287,14 +292,15 @@ Days 4-5: Link Module
 ├── Test link generation
 └── Verify link sharing
 
-Days 6-8: Swipe Module ⭐ (Most Important)
+Days 6-8: Client Link Interface ⭐ (Most Important)
 ├── Create module structure
-├── Implement SwipeService
-├── Configure react-tinder-card
-├── Build swipe interface
-├── Add gesture handling
-├── Create bucket views
-└── Extensive mobile testing
+├── Implement ClientLinkService
+├── Configure carousel library
+├── Build carousel interface
+├── Add property expansion
+├── Create bucket management
+├── Add visit booking
+└── Extensive responsive testing
 
 Days 9-10: Analytics Module
 ├── Create module structure
@@ -319,7 +325,7 @@ Days 11-12: Integration & Polish
 ## Architecture Decisions
 | Date | Decision | Reasoning | Outcome |
 |------|----------|-----------|---------|
-| Day 1 | Use react-tinder-card | Proven swipe library | Good performance |
+| Day 1 | Use embla-carousel | Modern carousel library | Excellent performance |
 | Day 2 | Supabase real-time | Built-in WebSockets | Easy implementation |
 
 ## Module Lessons
@@ -331,9 +337,9 @@ Days 11-12: Integration & Polish
 - Lesson: Code collisions possible
 - Solution: Check uniqueness before save
 
-### Swipe Module
-- Lesson: Gesture conflicts on iOS
-- Solution: Adjust threshold values
+### Client Interface Module
+- Lesson: Touch navigation on mobile
+- Solution: Multiple input methods
 
 ## Performance Optimizations
 - Preload 2 cards ahead
@@ -364,7 +370,7 @@ User Action Flow:
 
 Client Action Flow:
 ┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
-│  Client  │────▶│   Link   │────▶│  Swipe   │────▶│ Analytics│
+│  Client  │────▶│   Link   │────▶│ Carousel │────▶│ Analytics│
 │  Opens   │     │ Validate │     │  Module  │     │  Track   │
 └──────────┘     └──────────┘     └──────────┘     └──────────┘
 ```
@@ -402,7 +408,7 @@ Pre-Commit Checklist:
 - Use proper TypeScript interfaces
 - Test on real mobile devices
 - Add proper error boundaries
-- Use optimistic updates for swipes
+- Use optimistic updates for bucket assignments
 - Implement proper loading states
 - Cache expensive computations
 - Document unusual decisions
@@ -445,10 +451,11 @@ Link Module Success:
 □ Links are shareable
 □ No authentication needed
 
-Swipe Module Success:
-□ Smooth swipe animations
-□ Correct gesture detection
-□ Buckets update properly
+Client Interface Module Success:
+□ Smooth carousel navigation
+□ Property expansion works
+□ Bucket management intuitive
+□ Visit booking functional
 □ Works on all devices
 
 Analytics Module Success:

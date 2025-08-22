@@ -1,6 +1,17 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+
+/**
+ * @deprecated SwipeInterface is deprecated and will be removed in a future version.
+ * Please use PropertyCarousel from @/components/client instead.
+ * 
+ * Migration guide:
+ * - Replace SwipeInterface with PropertyCarousel
+ * - Update prop names: properties -> properties, sessionId -> not needed
+ * - Use onBucketAssign instead of onSwipe for user interactions
+ * - See PropertyCarousel documentation for complete API
+ */
 import TinderCard from 'react-tinder-card'
 import { motion } from 'framer-motion'
 import PropertySwipeCard from './PropertySwipeCard'
@@ -20,6 +31,13 @@ export default function SwipeInterface({
   onSwipeComplete,
   onSwipe
 }: SwipeInterfaceProps) {
+  // Deprecation warning
+  useEffect(() => {
+    console.warn(
+      '🚨 DEPRECATION WARNING: SwipeInterface is deprecated and will be removed in a future version. ' +
+      'Please migrate to PropertyCarousel from @/components/client for better performance and features.'
+    )
+  }, [])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)

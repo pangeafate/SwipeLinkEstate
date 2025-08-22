@@ -12,7 +12,19 @@
     "test:coverage": "jest --coverage",
     "test:unit": "jest --testPathPattern=unit",
     "test:integration": "jest --testPathPattern=integration",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    
+    "db:migrate:crm": "node scripts/apply-crm-schema-simple.mjs apply",
+    "db:migrate:crm:check": "node scripts/apply-crm-schema-simple.mjs check",
+    "db:migrate:crm:status": "node scripts/apply-crm-schema-simple.mjs check",
+    "db:migrate:crm:verify": "node scripts/apply-crm-schema-simple.mjs check",
+    "db:test:crm": "node scripts/test-crm-schema.mjs all",
+    "db:test:crm:migrate": "node scripts/test-crm-schema.mjs migrate",
+    "db:test:crm:seed": "node scripts/test-crm-schema.mjs seed",
+    "db:test:crm:perf": "node scripts/test-crm-schema.mjs perf",
+    
+    "db:setup:dev": "npm run db:migrate:crm && npm run db:seed:crm && npm run db:test:crm",
+    "db:reset:dev": "npm run db:migrate:crm:rollback && npm run db:migrate:crm && npm run db:seed:crm"
   },
   "dependencies": {
     "@react-spring/web": "^9.7.5",
@@ -20,6 +32,7 @@
     "@tanstack/react-query": "^5.0.0",
     "clsx": "^2.0.0",
     "framer-motion": "^10.16.0",
+    "lucide-react": "^0.540.0",
     "next": "^14.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
@@ -30,6 +43,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
+    "@tanstack/react-query-devtools": "^5.85.5",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.0.0",

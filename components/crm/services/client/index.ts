@@ -1,0 +1,6 @@
+export { ClientService } from './ClientService'
+export { ClientProfileService } from './client-profile.service'
+export { ClientDataService } from './client-data.service'
+export { ClientAnalyticsService } from './client-analytics.service'
+export { ClientInsightsService } from './client-insights.service'
+export { ClientSimilarityService } from './client-similarity.service'
