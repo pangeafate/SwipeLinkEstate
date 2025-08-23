@@ -1,0 +1,33 @@
+/* PipelineStage specific styles to prevent rendering issues */
+
+/* Ensure pipeline stages have proper stacking context */
+.pipelineStage {
+  position: relative;
+  z-index: 2;
+  isolation: isolate; /* Create new stacking context */
+}
+
+/* Ensure header borders are not affected by overlays */
+.pipelineStageHeader {
+  position: relative;
+  z-index: 3;
+}
+
+/* Fix for consistent backgrounds */
+.pipelineStageContainer {
+  background-color: #f9fafb; /* bg-gray-50 */
+  position: relative;
+  z-index: 2;
+}
+
+.pipelineStageDeals {
+  background-color: white;
+  position: relative;
+  z-index: 2;
+}
+
+/* Prevent gradient overlay interference */
+.pipelineStage::before,
+.pipelineStage::after {
+  display: none;
+}

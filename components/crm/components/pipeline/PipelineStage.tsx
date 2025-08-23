@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import type { Deal, DealStage, DealStatus } from '../../types'
 import { PipelineDealCard } from './PipelineDealCard'
 import PipelineStageHeader from './PipelineStageHeader'
+import styles from './PipelineStage.module.css'
 
 interface PipelineStageProps {
   stage: DealStage
@@ -46,6 +47,19 @@ export const PipelineStage: React.FC<PipelineStageProps> = ({
     return titles[stage]
   }
 
+  const getStageTrigger = (stage: DealStage) => {
+    const triggers = {
+      created: 'Link was generated',
+      shared: 'Sent to client',
+      accessed: 'Client opened link',
+      engaged: 'Client swiped properties',
+      qualified: 'High engagement score',
+      advanced: 'Visit was scheduled',
+      closed: 'Deal completed'
+    }
+    return triggers[stage]
+  }
+
   const getStageIcon = (stage: DealStage) => {
     const icons = {
       created: '📝',
@@ -63,11 +77,15 @@ export const PipelineStage: React.FC<PipelineStageProps> = ({
   const totalValue = deals.reduce((sum, deal) => sum + (deal.dealValue || 0), 0)
 
   return (
-    <div className="flex-1 min-w-80 bg-gray-50 rounded-lg overflow-hidden">
+    <div 
+      className={`flex-shrink-0 w-80 bg-gray-50 rounded-lg overflow-hidden ${styles.pipelineStage}`}
+      style={{ position: 'relative', zIndex: 2 }}
+    >
       {/* Enhanced Pipedrive-style Stage Header */}
       <PipelineStageHeader
         stageName={getStageTitle(stage)}
         stageKey={stage}
+        stageTrigger={getStageTrigger(stage)}
         dealCount={deals.length}
         totalValue={totalValue}
         currency="USD"
@@ -78,7 +96,7 @@ export const PipelineStage: React.FC<PipelineStageProps> = ({
 
       {/* Deals List */}
       {!isCollapsed && (
-        <div className="p-4 space-y-3 min-h-32 bg-white">
+        <div className={`p-4 space-y-3 min-h-32 bg-white ${styles.pipelineStageDeals}`}>
           {deals.map(deal => (
             <PipelineDealCard
               key={deal.id}

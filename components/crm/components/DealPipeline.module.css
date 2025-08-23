@@ -1,0 +1,54 @@
+/* Custom scrollbar styling for Deal Pipeline */
+.pipelineScrollContainer {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 #F3F4F6;
+}
+
+.pipelineScrollContainer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.pipelineScrollContainer::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 4px;
+}
+
+.pipelineScrollContainer::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+.pipelineScrollContainer::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Smooth scrolling */
+.pipelineScrollContainer {
+  scroll-behavior: smooth;
+}
+
+/* Shadow indicators for scroll */
+.pipelineScrollContainer {
+  position: relative;
+}
+
+.pipelineScrollContainer::before,
+.pipelineScrollContainer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pipelineScrollContainer::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(249, 250, 251, 1), rgba(249, 250, 251, 0));
+}
+
+.pipelineScrollContainer::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(249, 250, 251, 1), rgba(249, 250, 251, 0));
+}
